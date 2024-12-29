@@ -1,4 +1,6 @@
 ## Howdy 
 
 to-do list: 
-- write better readme 
+- write better readme
+- better readme
+- 
