@@ -1,0 +1,3 @@
+Blackjack Q-Learning proj: https://github.com/arindal1/blackjack-qlearning-rl/blob/main/qlearning.py
+
+Guide on 'Medium' website (good for image inspiration): https://towardsdatascience.com/winning-blackjack-using-machine-learning-681d924f197c
