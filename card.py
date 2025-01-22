@@ -62,6 +62,3 @@ class Deck():
         self.shuffle()
         return self.deck
     
-    
-deck = Deck()
-deck.get_cards()
