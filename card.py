@@ -4,7 +4,7 @@ class Card():
     """A Class for each card
     """
     
-    def __init__(self, suit : str, number : int, value : int) -> None :
+    def __init__(self, suit : str, type : int, value : int) -> None :
         """Construtor that initiates cards with a value
 
         Args:
@@ -13,7 +13,7 @@ class Card():
             value (Int): value of the card
         """
         self.suit = suit
-        self.number = number
+        self.type = type
         self.value = value
         
     def change_value(self, new_value : int) -> None:

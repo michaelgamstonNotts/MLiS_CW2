@@ -6,27 +6,128 @@ class Agent():
     will contain q learning 
     """
     
-    def __init__(self, hands : int):
-        self.hands = hands
+    def __init__(self, playable_hands : int):
+        self.playable_hands = playable_hands
+        self.unused_ace = 0
         self.hand = []
         self.score = 0
         self.cumulative_reward = 0
 
+
+        #algorithm hyerparameters
+        self.alpha = 0.1
+        self.epislon = 0.9 
+        self.gamma = 0.1
+    
+    def update_q_table(self):
+        raise NotImplementedError('update_q_table not implemented')
         
-    def assess(_):
-        print(inte:=np.random.randint(0,2))
-        if inte:
-            return 'hit'
-        else: 
-            return 'stick'
+    def check_for_ace(self):
         
-    def hit(self, new_card : Card) -> None:
+        card_types = [card_in_hand.type for card_in_hand in self.hand]
+        if (card_types.count('Ace') > 0) and self.unused_ace: 
+            self.change_ace_value()
+        self.unused_ace = 1
+                
+    def change_ace_value(self):
+        self.score -= 10
+        self.unused_ace = 0
+        
+    def hit(self, new_card : Card, training=False) -> None:
+        new_score = new_card.value + self.score
+        if training and (new_score < 22): 
+            if new_score == 21: 
+                print('yes?')
+                self.update_q_table(new_card = new_card, action = 1, win_case = True)
+            else: 
+                self.update_q_table(new_card, 1)
+            
         self.score += new_card.value
         self.hand.append(new_card)
+        self.check_for_ace()
         
     def reset_hand(self) -> None:
         self.hand = []
         self.score = 0
+        self.unused_ace = 0
+        
+    def save_tables(self):
+        raise NotImplementedError('update_q_table not implemented')
+        
+class Infinite_agent(Agent):
+    
+    def __init__(self, hands):
+        super().__init__(hands)
+        #! estimate q-table
+        self.q_table_infinite = np.zeros([19,2,2])
+        self.policy = None
+        
+    def update_q_table(self, new_card : Card, action : int, win_case = False):
+        
+        #! update win case 
+        if new_card == None: 
+            new_card_value = 0
+        else:
+            new_card_value = new_card.value
+        
+        old_state = self.score
+        new_state = old_state+new_card_value
+        old_state_value = self.q_table_infinite[old_state-2][self.unused_ace][action] 
+        
+        reward = new_state**2 if action else self.score**2 
+        
+        if win_case or (action == 0): 
+            max_future_value = 0
+        elif action == 1:
+            max_future_value = np.amax(self.q_table_infinite[new_state-2][self.unused_ace][action])
+        
+        
+        #bellman eqaution 
+        self.q_table_infinite[old_state-2][self.unused_ace][action] = \
+            old_state_value + self.alpha*(reward + self.gamma*max_future_value + old_state_value)
+            
+        print('q-table updated')
+        
+    def assess(self, training):
+        
+        action_int_to_str = {0:'stick', 1:'hit'}
+        # for training only 
+        if training: 
+            #get q value for hit and stick
+            stick_q = self.q_table_infinite[self.score-2][self.unused_ace][0]
+            hit_q = self.q_table_infinite[self.score-2][self.unused_ace][1]
+            
+            #check if they are equal
+            if stick_q == hit_q:
+                #choose random action is yes
+                action = np.random.randint(0,2)
+            else:
+                #else run epsilon greedy to find action 
+                if self.epislon > np.random.random():
+                    action = np.argmin(self.q_table_infinite[self.score-2][self.unused_ace])
+                else:
+                    action = np.argmax(self.q_table_infinite[self.score-2][self.unused_ace])
+            
+            return action_int_to_str[action]
+        
+        else: 
+            #! reference completed policy
+            pass
+        
+    def save_tables(self):
+        np.save('infinite_q_table.npy', self.q_table_infinite)
+        self.policy = np.zeros([19,2])
+        #! think of some better names here 
+        for s_index, state in enumerate(self.q_table_infinite): 
+            for u_index, unused_ace in enumerate(state):
+                print(s_index, u_index)
+                self.policy[s_index][u_index] = np.amax(unused_ace)
+                
+        np.save('infinite_policy.npy', self.policy)
+        
+                
+        
+        
 
 class Dealer(): 
     """A class for the dealer of the blackjack game 
@@ -34,10 +135,17 @@ class Dealer():
     The dealer runs the game.
     """
     
-    def __init__(self, hands : int):
+    def __init__(self, hands : int, is_infinite = False, training = False):
         
         self.cards = None
-        self.player = Agent(hands)
+        self.is_infinite = is_infinite
+        self.training = training
+        
+        if self.is_infinite:
+            self.player = Infinite_agent(hands)
+        else: 
+            self.player = None
+        
         
           
     def get_decks(self, num_deck : int) -> None: 
@@ -60,13 +168,13 @@ class Dealer():
         else: 
             raise Exception('Interger above 0 needed.')
         
-    def hit(self, is_infinate = False) -> Card:
+    def hit(self, is_infinite = False) -> Card:
         """Gives the player a random card when requested. 
         Either deletes the card from the deck when finite cards required. 
-        Or keeps the card in the deck when is_infinate cards required.
+        Or keeps the card in the deck when is_infinite cards required.
 
         Args:
-            is_infinate_cards (bool, optional): argument to decide between is_infinate and finate . Defaults to False.
+            is_infinate_cards (bool, optional): argument to decide between is_infinite and finate . Defaults to False.
 
         Returns:
             Card: the selected card 
@@ -75,68 +183,86 @@ class Dealer():
         card_index = np.random.randint(0, len(self.cards))
         card = self.cards[card_index]
         
-        if is_infinate == False: 
+        if is_infinite == False: 
             self.cards = np.delete(self.cards, card_index)
             
         return card
     
-    def look_for_aces(self) -> None: 
-        pass 
-    
-    def evaulate_stop_condition(self, is_infinate = False, decrement_hand = False) -> int:
+    def evaulate_stop_condition(self, is_infinite = False, decrement_hand = False) -> int:
         
-        if is_infinate: 
+        if is_infinite: 
             if decrement_hand:
-                self.player.hands -= 1 
+                self.player.playable_hands -= 1 
             
-            stop_condition = self.player.hands
+            stop_condition = self.player.playable_hands
         else: 
             stop_condition = len(self.cards)
             
         return stop_condition
         
         
-    def play_game(self, is_infinate = False):
+    def play_game(self):
         
         """Loops through the game until the number of cards runs out or the select
         number of hands are finiished.
         """
-        stop_condition = self.evaulate_stop_condition(is_infinate=is_infinate)
+        stop_condition = self.evaulate_stop_condition(is_infinite=self.is_infinite)
         print(stop_condition)
 
         while(0 < stop_condition):
-            # ask player what they want to do,
+        
+            # give player a card
+            first_card = self.hit(is_infinite=self.is_infinite)
+            self.player.score = first_card.value 
+            self.player.hand.append(first_card)
+            self.player.check_for_ace()
+            print('first hand given')
             while True: 
                 
-                response = self.player.assess()
-                
+                response = self.player.assess(training=self.training)
+                print(response)
                 if response == 'hit':
-                    self.player.hit(self.hit(is_infinate=is_infinate))
+                    self.player.hit(self.hit(is_infinite=self.is_infinite), training=self.training)
                     print('player hits')
                 elif response == 'stick':
                     #assess and give reward
-                    self.player.cumulative_reward += self.player.score**2
+                    if self.training:
+                        print('update from stick')
+                        self.player.update_q_table(new_card = None, action = 0)
                     print(f'player sticks with score {self.player.score} and reward {self.player.cumulative_reward}')
                     break
                 
+                #!this can be moved to a better postition?
+                if self.player.score == 21: 
+                    break
+                
+                #! this needs review 
+                #use case where ace recieved at 20 and theirfore game should end in a 21 win 
                 if self.player.score > 21: 
-                    if self.look_for_aces() == False:
+                    if self.player.unused_ace == 0:
                         print('player looses')
                         break 
+                    else:
+                        self.player.change_ace_value()
                     
-        
                 if len(self.cards) < 1:
                     break 
+                
+            print(f'score {self.player.score}, hands {self.player.playable_hands}')
             
-            self.player.score = 0    
-            stop_condition = self.evaulate_stop_condition(is_infinate=is_infinate, decrement_hand=is_infinate)
-        
-        print(f'game ends with score {self.player.score} and reward {self.player.cumulative_reward}, hands {self.player.hands}, cards {len(self.cards)}')
+            self.player.reset_hand()
+            stop_condition = self.evaulate_stop_condition(is_infinite=self.is_infinite, decrement_hand=self.is_infinite)
+            
+        if self.training: 
+            print('epdisode of training complete')
+            self.player.save_tables()      
+            
+        print(f'game ends with score {self.player.score} and reward {self.player.cumulative_reward}, hands {self.player.playable_hands}, cards {len(self.cards)}')
         
             
-dealer = Dealer(1)
+dealer = Dealer(hands = 10000, is_infinite=True, training=True)
 dealer.get_decks(1)
-dealer.play_game(is_infinate=True)
+dealer.play_game()
 
     
     
