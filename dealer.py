@@ -1,5 +1,6 @@
 from card import Deck, Card
 import numpy as np
+import math
 import copy
 #hello
 class Agent():
@@ -19,6 +20,7 @@ class Agent():
         self.alpha = 0.1
         self.epislon = 0.1
         self.gamma = 0.9
+        self.total_iter = playable_hands
     
     def update_q_table(self):
         raise NotImplementedError('update_q_table not implemented')
@@ -73,7 +75,6 @@ class Infinite_agent(Agent):
     
     def __init__(self, hands):
         super().__init__(hands)
-        #! estimate q-table
         self.q_table_infinite = np.zeros([19,2,2])
         self.policy = None
         
@@ -96,6 +97,7 @@ class Infinite_agent(Agent):
         elif action == 1:
             max_future_value = np.amax(self.q_table_infinite[new_state-2][self.unused_ace][action])
         
+        self.alpha = 0.1/(2*math.exp(self.playable_hands/self.total_iter))
         
         #bellman eqaution 
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
