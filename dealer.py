@@ -22,17 +22,21 @@ class Agent():
     def update_q_table(self):
         raise NotImplementedError('update_q_table not implemented')
         
-    def check_for_ace(self):
+    def check_for_unused_ace(self):
         
-        card_types = [card_in_hand.type for card_in_hand in self.hand]
-        if (card_types.count('Ace') > 0) and self.unused_ace: 
-            self.change_ace_value()
-            #made a mistake fix me 
-        self.unused_ace = 1
+        aces = [card for card in self.hand if (card.type == 'Ace') and (card.value == 11)]
+        if len(aces) > 0:
+            self.unused_ace = 1
                 
     def change_ace_value(self):
-        self.score -= 10
-        self.unused_ace = 0
+        """finds the first unused ace in hand and changes it value down to 1
+        """
+        for card in self.hand:
+            if (card.type == 'Ace') and (card.value == 11):
+                card.change_value(1)
+                self.score -= 10
+                self.unused_ace = 0
+        print('changed ace value')
         
     def hit(self, new_card : Card, training=False) -> None:
         new_score = new_card.value + self.score
@@ -42,10 +46,19 @@ class Agent():
                 self.update_q_table(new_card = new_card, action = 1, win_case = True)
             else: 
                 self.update_q_table(new_card, 1)
+        elif training and (new_card.type == 'Ace'):
+            #use case for if ace recieved at 20
+            
+            #decrement value of ace 
+            new_card.change_value(1)
+            self.update_q_table(new_card = new_card, action = 1, win_case = True)
+            #do win case q table update 
+            
+            
             
         self.score += new_card.value
         self.hand.append(new_card)
-        self.check_for_ace()
+        self.check_for_unused_ace()
         
     def reset_hand(self) -> None:
         self.hand = []
@@ -95,8 +108,14 @@ class Infinite_agent(Agent):
         # for training only 
         if training: 
             #get q value for hit and stick
-            stick_q = self.q_table_infinite[self.score-2][self.unused_ace][0]
-            hit_q = self.q_table_infinite[self.score-2][self.unused_ace][1]
+            try:
+                stick_q = self.q_table_infinite[self.score-2][self.unused_ace][0]
+                hit_q = self.q_table_infinite[self.score-2][self.unused_ace][1]
+            except IndexError as e: 
+                print(e)
+                print(f'score: {self.score} aces {self.unused_ace}')
+                print(*self.hand)
+                raise e
             
             #check if they are equal
             if stick_q == hit_q:
@@ -126,10 +145,6 @@ class Infinite_agent(Agent):
                 
         np.save('infinite_policy.npy', self.policy)
         
-                
-        
-        
-
 class Dealer(): 
     """A class for the dealer of the blackjack game 
     this is a passive dealer. 
@@ -211,14 +226,29 @@ class Dealer():
         print(stop_condition)
 
         while(0 < stop_condition):
-        
+            
             # give player a card
             first_card = self.hit(is_infinite=self.is_infinite)
             self.player.score = first_card.value 
             self.player.hand.append(first_card)
-            self.player.check_for_ace()
+            self.player.check_for_unused_ace()
             print('first hand given')
             while True: 
+                print(f'round begins with: score {self.player.score}, aces {self.player.unused_ace}')
+                print(*self.player.hand)
+            
+                if self.player.score == 21: 
+                    break
+                
+                #! this needs review 
+                #use case where ace recieved at 20 and therefor game should end in a 21 win 
+                if self.player.score > 21: 
+                    if self.player.unused_ace == 0:
+                        print('player looses')
+                        break 
+                    else:
+                        self.player.change_ace_value()
+                        print('got to over 21, changed ace value')
                 
                 response = self.player.assess(training=self.training)
                 print(response)
@@ -233,18 +263,7 @@ class Dealer():
                     print(f'player sticks with score {self.player.score} and reward {self.player.cumulative_reward}')
                     break
                 
-                #!this can be moved to a better postition?
-                if self.player.score == 21: 
-                    break
                 
-                #! this needs review 
-                #use case where ace recieved at 20 and theirfore game should end in a 21 win 
-                if self.player.score > 21: 
-                    if self.player.unused_ace == 0:
-                        print('player looses')
-                        break 
-                    else:
-                        self.player.change_ace_value()
                     
                 if len(self.cards) < 1:
                     break 
@@ -261,7 +280,7 @@ class Dealer():
         print(f'game ends with score {self.player.score} and reward {self.player.cumulative_reward}, hands {self.player.playable_hands}, cards {len(self.cards)}')
         
             
-dealer = Dealer(hands = 10000, is_infinite=True, training=True)
+dealer = Dealer(hands = 100000, is_infinite=True, training=True)
 dealer.get_decks(1)
 dealer.play_game()
 

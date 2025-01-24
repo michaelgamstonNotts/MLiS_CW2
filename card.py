@@ -26,6 +26,9 @@ class Card():
         """
         self.value = new_value
         
+    def __str__(self):
+        return f'{self.type}-{self.suit}-{self.value}'
+        
 class Deck(): 
     """A class for deck management and manipulation 
     """

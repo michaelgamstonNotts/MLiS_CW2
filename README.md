@@ -1,6 +1,5 @@
 ## Howdy 
 
 to-do list: 
-- write better readme
-- better readme
-- 
+- fix counting aces bug 
+- fix bug where tables are updated from state 21
