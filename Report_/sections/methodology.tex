@@ -1,3 +1,12 @@
 \section{Methodology}
 
-\(Q_{new}(s,a)=Q_{old}(s,a)+\overbrace{\alpha}^{\mathclap{\text{Learning Rate}}}(R(s,a)+\gamma MaxQ(s',a')+Q_{old}(s,a))\)
+
+
+In training an agent to play Blackjack, an iterative Q-Learning approach has been taken. Q-Learning aims to learn the optimal 'q-value' for given state-action pairs in an environment, i.e., the respective value of making a certain move in a certain environmental state. ... further description
+
+This approach was selected because it does not require direct 
+
+
+\begin{multline}
+    Q_{new}(s,a)=Q_{old}(s,a)+\overbrace{\alpha}^{\mathclap{\text{Learning Rate}}}(R(s,a)+\\ \underbrace{\gamma}_{\mathclap{\text{Discount rate}}}MaxQ(s',a')+Q_{old}(s,a))
+\end{multline}

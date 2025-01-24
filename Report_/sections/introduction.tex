@@ -1,3 +1,25 @@
 \section{Introduction}
 
-Write your introduction here. One can cite\cite{ARXIVEXAMPLE} referenced in the \textit{references.bib} file.
+Blackjack, also known as twenty-one, is the most widely played casino game in the world. ... There are many variations to the game, but for the purposes of this project, the sequence of play was as follows:
+
+\begin{enumerate}
+    \item A card is dealt to the player with value \(C_1\).
+    \item For \(n\) iterations, or until a total score of 21 is exceeded, the player can make one of two choices;
+    \begin{enumerate} 
+        \item Stick, and end the game.
+        \item Hit, and receive another card with value \(C_{n+1}\).
+    \end{enumerate}
+    \item The final score is calculated using
+        \begin{equation}
+            \text{Score} = 
+            \begin{cases}
+                (\sum C_n)^2 & \text{if } \sum C_n \le 21\\
+                0            & \text{if } \sum C_n >   21\\
+            \end{cases}
+        \end{equation}
+\end{enumerate}
+
+Note that the dealer was passive, meaning 
+
+
+Here, we answer the question; how can I get kicked out of the casino?
