@@ -1,5 +1,4 @@
-\documentclass[aps,pre,superscriptaddress,twocolumn,longbibliography]{revtex4-2}
-
+\documentclass[aps,pre,superscriptaddress,twocolumn,longbibliography,10pt]{revtex4-2}
 
 % Common Package References
 \usepackage{graphicx}
@@ -23,20 +22,24 @@
 \usepackage{xcolor}
 \usepackage{xfrac}
 \usepackage{cleveref}
+\usepackage[numbers,sort&compress]{natbib}
+
 
 % Commenting commands
 
 % Template below: replace 'initials' with your initials
-%\newcommand{\initials}[1]{{\color{magenta}{\bf [INITIALS: #1]}}}
-
-
+% \newcommand{\initials}[1]{{\color{magenta}{\bf [INITIALS: KR]}}}
 % Custom Commands
 \newcommand{\singlefigure}{0.45\textwidth}
+
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+
+% Example citation
 
 
 \begin{document}
 
-% TITLE
 \title{Reinforcing Blackjack: A Machine Learning approach to Gambling \ how to get escorted out of the casino}
 
 % AUTHORS
@@ -58,14 +61,13 @@
 
 \maketitle
 
-% SECTIONS
-% Each section is written in a different file
+
 \input{sections/introduction}
 \input{sections/methodology}
 \input{sections/results}
 \input{sections/conclusions}
 % BIBLIOGRAPHY
-\appendix
-\bibliography{references}
+% \printbibliography
 
+\appendix
 \end{document}

@@ -1,0 +1,2 @@
+{"rule":"PROBLEM_SOLVE_HYPHEN","sentence":"^\\QProblem solving with reinforcement learning\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qbbj\\E$"}
