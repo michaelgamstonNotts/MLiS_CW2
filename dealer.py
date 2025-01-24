@@ -1,6 +1,6 @@
 from card import Deck, Card
 import numpy as np
-
+#hello
 class Agent():
     """A class for the agent that plays blackjack 
     will contain q learning 
