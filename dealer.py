@@ -1,5 +1,6 @@
 from card import Deck, Card
 import numpy as np
+import copy
 #hello
 class Agent():
     """A class for the agent that plays blackjack 
@@ -197,7 +198,7 @@ class Dealer():
         """
         
         card_index = np.random.randint(0, len(self.cards))
-        card = self.cards[card_index]
+        card = copy.copy(self.cards[card_index])
         
         if is_infinite == False: 
             self.cards = np.delete(self.cards, card_index)
@@ -232,6 +233,7 @@ class Dealer():
             self.player.score = first_card.value 
             self.player.hand.append(first_card)
             self.player.check_for_unused_ace()
+
             print('first hand given')
             while True: 
                 print(f'round begins with: score {self.player.score}, aces {self.player.unused_ace}')
