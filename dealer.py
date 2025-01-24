@@ -17,8 +17,8 @@ class Agent():
 
         #algorithm hyerparameters
         self.alpha = 0.1
-        self.epislon = 0.9 
-        self.gamma = 0.1
+        self.epislon = 0.1
+        self.gamma = 0.9
     
     def update_q_table(self):
         raise NotImplementedError('update_q_table not implemented')
@@ -133,7 +133,7 @@ class Infinite_agent(Agent):
         
         else: 
             #! reference completed policy
-            pass
+            raise NotImplementedError('non-training version not implemented')
         
     def save_tables(self):
         np.save('infinite_q_table.npy', self.q_table_infinite)
@@ -142,7 +142,7 @@ class Infinite_agent(Agent):
         for s_index, state in enumerate(self.q_table_infinite): 
             for u_index, unused_ace in enumerate(state):
                 print(s_index, u_index)
-                self.policy[s_index][u_index] = np.amax(unused_ace)
+                self.policy[s_index][u_index] = np.argmax(unused_ace)
                 
         np.save('infinite_policy.npy', self.policy)
         
@@ -234,7 +234,7 @@ class Dealer():
             self.player.hand.append(first_card)
             self.player.check_for_unused_ace()
 
-            print('first hand given')
+            print('\nfirst hand given ----------------------------------------------')
             while True: 
                 print(f'round begins with: score {self.player.score}, aces {self.player.unused_ace}')
                 print(*self.player.hand)
@@ -242,8 +242,6 @@ class Dealer():
                 if self.player.score == 21: 
                     break
                 
-                #! this needs review 
-                #use case where ace recieved at 20 and therefor game should end in a 21 win 
                 if self.player.score > 21: 
                     if self.player.unused_ace == 0:
                         print('player looses')
@@ -282,7 +280,7 @@ class Dealer():
         print(f'game ends with score {self.player.score} and reward {self.player.cumulative_reward}, hands {self.player.playable_hands}, cards {len(self.cards)}')
         
             
-dealer = Dealer(hands = 100000, is_infinite=True, training=True)
+dealer = Dealer(hands = 10000, is_infinite=True, training=True)
 dealer.get_decks(1)
 dealer.play_game()
 
