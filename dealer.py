@@ -27,6 +27,7 @@ class Agent():
         card_types = [card_in_hand.type for card_in_hand in self.hand]
         if (card_types.count('Ace') > 0) and self.unused_ace: 
             self.change_ace_value()
+            #made a mistake fix me 
         self.unused_ace = 1
                 
     def change_ace_value(self):
