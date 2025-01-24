@@ -57,7 +57,8 @@ class Agent():
             self.update_q_table(new_card = new_card, action = 1, win_case = True)
             #do win case q table update 
             
-            
+        elif training and new_score > 21:
+            self.update_q_table(new_card = new_card, action = 1, win_case = False)
             
         self.score += new_card.value
         self.hand.append(new_card)
@@ -90,15 +91,18 @@ class Infinite_agent(Agent):
         new_state = old_state+new_card_value
         old_state_value = self.q_table_infinite[old_state-2][self.unused_ace][action] 
         
-        reward = new_state**2 if action else self.score**2 
-        
-        if win_case or (action == 0): 
+        if new_state > 21:
+            reward = 0
             max_future_value = 0
-        elif action == 1:
-            max_future_value = np.amax(self.q_table_infinite[new_state-2][self.unused_ace][action])
         
-        self.alpha = 0.1/(2*math.exp(self.playable_hands/self.total_iter))
+        else:
+            reward = new_state**2 if action else self.score**2 
+            if win_case or (action == 0): 
+                max_future_value = 0
+            elif action == 1:
+                max_future_value = np.amax(self.q_table_infinite[new_state-2][self.unused_ace][action])
         
+        self.alpha = 0.3/(math.exp(self.playable_hands/self.total_iter))
         #bellman eqaution 
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
             old_state_value + self.alpha*(reward + self.gamma*max_future_value + old_state_value)
@@ -246,7 +250,7 @@ class Dealer():
                 
                 if self.player.score > 21: 
                     if self.player.unused_ace == 0:
-                        print('player looses')
+                        print('player loses')
                         break 
                     else:
                         self.player.change_ace_value()
@@ -282,7 +286,7 @@ class Dealer():
         print(f'game ends with score {self.player.score} and reward {self.player.cumulative_reward}, hands {self.player.playable_hands}, cards {len(self.cards)}')
         
             
-dealer = Dealer(hands = 10000, is_infinite=True, training=True)
+dealer = Dealer(hands = 100000, is_infinite=True, training=True)
 dealer.get_decks(1)
 dealer.play_game()
 
