@@ -18,7 +18,7 @@ class Agent():
 
         #algorithm hyerparameters
         self.alpha = 0.3
-        self.epislon = 0.2
+        self.epislon = 0.3
         self.gamma = 0.9
         self.total_iter = playable_hands
     
@@ -58,7 +58,17 @@ class Agent():
             #do win case q table update 
             
         elif training and new_score > 21:
-            self.update_q_table(new_card = new_card, action = 1, win_case = False)
+            if self.unused_ace: 
+                #decrese ace 
+                self.change_ace_value()
+                self.unused_ace = 1
+                print(*self.hand)
+                self.update_q_table(new_card = new_card, action = 1, win_case = False, used_an_ace = True)
+                self.unused_ace = 0 
+                #and update q -table 
+                #unassign flag 
+            else:
+                self.update_q_table(new_card = new_card, action = 1, win_case = False)
             
         self.score += new_card.value
         self.hand.append(new_card)
@@ -79,7 +89,7 @@ class Infinite_agent(Agent):
         self.q_table_infinite = np.zeros([19,2,2])
         self.policy = None
         
-    def update_q_table(self, new_card : Card, action : int, win_case = False):
+    def update_q_table(self, new_card : Card, action : int, win_case = False, used_an_ace = False):
         
         #! update win case 
         if new_card == None: 
@@ -100,7 +110,10 @@ class Infinite_agent(Agent):
             if win_case or (action == 0): 
                 max_future_value = 0
             elif action == 1:
-                max_future_value = np.amax(self.q_table_infinite[new_state-2][self.unused_ace][action])
+                if used_an_ace:
+                    max_future_value = np.amax(self.q_table_infinite[new_state-2][0][action])
+                else:
+                    max_future_value = np.amax(self.q_table_infinite[new_state-2][self.unused_ace][action])
         
         self.alpha = 0.3/(math.exp(self.playable_hands/self.total_iter))
         #bellman eqaution 
@@ -253,6 +266,7 @@ class Dealer():
                         print('player loses')
                         break 
                     else:
+                        #! need to update q-value
                         self.player.change_ace_value()
                         print('got to over 21, changed ace value')
                 

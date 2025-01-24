@@ -44,7 +44,7 @@ class Deck():
         """
         self.deck = []
         suits = ['Diamonds', 'Hearts', 'Clubs', 'Spades']
-        card_types = {'2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':10, 'Jack':10, 'Queen':10, 'King':10, 'Ace':11}
+        card_types = {'2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':10, 'Jack':10, 'Queen':10, 'King':10, 'Ace':11, 'Ace':11}
         for suit in suits:
             for card in card_types.keys():
                 self.deck.append(Card(suit, card, card_types[card]))
