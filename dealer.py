@@ -17,8 +17,8 @@ class Agent():
 
 
         #algorithm hyerparameters
-        self.alpha = 0.1
-        self.epislon = 0.1
+        self.alpha = 0.3
+        self.epislon = 0.2
         self.gamma = 0.9
         self.total_iter = playable_hands
     
@@ -105,7 +105,7 @@ class Infinite_agent(Agent):
         self.alpha = 0.3/(math.exp(self.playable_hands/self.total_iter))
         #bellman eqaution 
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
-            old_state_value + self.alpha*(reward + self.gamma*max_future_value + old_state_value)
+            old_state_value + self.alpha*(reward + self.gamma*max_future_value - old_state_value)
             
         print('q-table updated')
         
@@ -286,7 +286,7 @@ class Dealer():
         print(f'game ends with score {self.player.score} and reward {self.player.cumulative_reward}, hands {self.player.playable_hands}, cards {len(self.cards)}')
         
             
-dealer = Dealer(hands = 100000, is_infinite=True, training=True)
+dealer = Dealer(hands = 50000, is_infinite=True, training=True)
 dealer.get_decks(1)
 dealer.play_game()
 
