@@ -5,3 +5,5 @@ Guide on 'Medium' website (good for image inspiration): https://towardsdatascien
 https://ai.stackexchange.com/questions/26130/what-are-the-popular-approaches-to-estimating-the-q-function
 
 https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=6ba80f6366bcf7a8513cc4aa8c6486af0df6a6c2
+
+The optimum strategy in blackjack: https://web.williams.edu/Mathematics/sjmiller/public_html/341Fa09/handouts/Baldwin_OptimalStrategyBlackjack.pdf
