@@ -1,6 +1,8 @@
 /test.py
 /infinite_policy.npy
 /infinite_q_table.npy
+/finite_policy.npy
+/finite_q_table.npy
 /mainNotes.bib
 /main.synctex.gz
 /main.bbl

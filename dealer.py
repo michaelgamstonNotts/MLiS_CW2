@@ -24,6 +24,9 @@ class Agent():
     
     def update_q_table(self):
         raise NotImplementedError('update_q_table not implemented')
+
+    def assess(self):
+        raise NotImplementedError('assess not implemented')
         
     def check_for_unused_ace(self):
         
@@ -80,7 +83,7 @@ class Agent():
         self.unused_ace = 0
         
     def save_tables(self):
-        raise NotImplementedError('update_q_table not implemented')
+        raise NotImplementedError('save_tables not implemented')
         
 class Infinite_agent(Agent):
     
@@ -115,6 +118,7 @@ class Infinite_agent(Agent):
                 else:
                     max_future_value = np.amax(self.q_table_infinite[new_state-2][self.unused_ace][action])
         
+        #! 0.3 needs to change, make it a variable of the starting alpha
         self.alpha = 0.3/(math.exp(self.playable_hands/self.total_iter))
         #bellman eqaution 
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
@@ -151,8 +155,14 @@ class Infinite_agent(Agent):
             return action_int_to_str[action]
         
         else: 
-            #! reference completed policy
-            raise NotImplementedError('non-training version not implemented')
+            try:
+                if type(self.policy) != np.ndarray: 
+                    self.policy = np.load('infinite_policy.npy')
+            except FileNotFoundError as e:
+                print(e)
+                raise RuntimeError('Training required to create policy table.')
+            
+            return action_int_to_str[self.policy[self.score-2][self.unused_ace]]
         
     def save_tables(self):
         np.save('infinite_q_table.npy', self.q_table_infinite)
@@ -164,6 +174,118 @@ class Infinite_agent(Agent):
                 self.policy[s_index][u_index] = np.argmax(unused_ace)
                 
         np.save('infinite_policy.npy', self.policy)
+        
+class Finite_agent(Agent):
+    
+    def __init__(self, hands):
+        super().__init__(hands)
+        self.q_table_finite = np.zeros([19,101,2,2])
+        self.policy = None
+        self.card_tracker = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0}
+        self.loss_state = 0
+        
+    def calculate_probability_of_loss(self):
+        
+        total_number_cards = sum(self.card_tracker.values())
+        #find the minimum score that will make the agent lose 
+        #find the number of cards that equal or exceed over the total number of cards 
+        loss_value = 21 - self.score
+        
+        if loss_value < 11:
+            numerator = sum(list(self.card_tracker.values())[loss_value:])
+        else: 
+            numerator = 0
+        print(self.card_tracker.values())
+        print(f'score {self.score} - loss value {loss_value} - numerator {numerator} - denom {total_number_cards}')
+        
+        self.loss_state = int(round((numerator / total_number_cards), 2)*100)
+        print(f'- loss_state {self.loss_state}')
+        
+    def assess(self, training):
+        
+        action_int_to_str = {0:'stick', 1:'hit'}
+        # for training only 
+        self.calculate_probability_of_loss()
+        
+        if training: 
+            #get q value for hit and stick
+            try:
+                stick_q = self.q_table_finite[self.score-2][self.loss_state][self.unused_ace][0]
+                hit_q = self.q_table_finite[self.score-2][self.loss_state][self.unused_ace][1]
+            except IndexError as e: 
+                print(e)
+                print(f'score: {self.score} aces {self.unused_ace}')
+                print(*self.hand)
+                raise e
+            
+            #check if they are equal
+            if stick_q == hit_q:
+                #choose random action is yes
+                action = np.random.randint(0,2)
+            else:
+                #else run epsilon greedy to find action 
+                if self.epislon > np.random.random():
+                    action = np.argmin(self.q_table_finite[self.score-2][self.loss_state][self.unused_ace])
+                else:
+                    action = np.argmax(self.q_table_finite[self.score-2][self.loss_state][self.unused_ace])
+            
+            return action_int_to_str[action]
+        
+        else: 
+            try:
+                if type(self.policy) != np.ndarray: 
+                    self.policy = np.load('infinite_policy.npy')
+            except FileNotFoundError as e:
+                print(e)
+                raise RuntimeError('Training required to create policy table.')
+            
+            return action_int_to_str[self.policy[self.score-2][self.loss_state][self.unused_ace]]
+        
+    def update_q_table(self, new_card : Card, action : int, win_case = False, used_an_ace = False):
+        
+        #! update win case 
+        if new_card == None: 
+            new_card_value = 0
+        else:
+            new_card_value = new_card.value
+        
+        old_state = self.score
+        new_state = old_state+new_card_value
+        old_state_value = self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] 
+        
+        if new_state > 21:
+            reward = 0
+            max_future_value = 0
+        
+        else:
+            reward = new_state**2 if action else self.score**2 
+            if win_case or (action == 0): 
+                max_future_value = 0
+            elif action == 1:
+                if used_an_ace:
+                    max_future_value = np.amax(self.q_table_finite[new_state-2][self.loss_state][0][action])
+                else:
+                    max_future_value = np.amax(self.q_table_finite[new_state-2][self.loss_state][self.unused_ace][action])
+        
+        #! need to think of how to do degrading alpha for finite cards
+        #self.alpha = 0.3/(math.exp(self.playable_hands/len(self.cards)))
+        #bellman eqaution 
+        self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] = \
+            old_state_value + self.alpha*(reward + self.gamma*max_future_value - old_state_value)
+            
+        print('q-table updated')
+        
+    def save_tables(self):
+        np.save('finite_q_table.npy', self.q_table_finite)
+        self.policy = np.zeros([19,101,2])
+        #! think of some better names here 
+        for s_index, state in enumerate(self.q_table_finite): 
+            for p_index, percentage in enumerate(state): 
+                for u_index, unused_ace in enumerate(percentage):
+                    self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
+                
+        np.save('finite_policy.npy', self.policy)
+        
         
 class Dealer(): 
     """A class for the dealer of the blackjack game 
@@ -180,7 +302,7 @@ class Dealer():
         if self.is_infinite:
             self.player = Infinite_agent(hands)
         else: 
-            self.player = None
+            self.player = Finite_agent(0)
         
         
           
@@ -204,6 +326,12 @@ class Dealer():
         else: 
             raise Exception('Interger above 0 needed.')
         
+        if self.is_infinite == False: 
+            for card_type in list(self.player.card_tracker.keys())[:-1]: 
+                self.player.card_tracker[card_type] = 4*num_deck
+            self.player.card_tracker[10] = 16*num_deck
+
+        
     def hit(self, is_infinite = False) -> Card:
         """Gives the player a random card when requested. 
         Either deletes the card from the deck when finite cards required. 
@@ -221,6 +349,10 @@ class Dealer():
         
         if is_infinite == False: 
             self.cards = np.delete(self.cards, card_index)
+            if card.type == 'Ace':
+                self.player.card_tracker[1] -= 1
+            else:
+                self.player.card_tracker[card.value] -= 1 
             
         return card
     
@@ -257,7 +389,9 @@ class Dealer():
             while True: 
                 print(f'round begins with: score {self.player.score}, aces {self.player.unused_ace}')
                 print(*self.player.hand)
-            
+                if len(self.cards) < 1:
+                    break 
+                
                 if self.player.score == 21: 
                     break
                 
@@ -285,10 +419,9 @@ class Dealer():
                 
                 
                     
-                if len(self.cards) < 1:
-                    break 
                 
-            print(f'score {self.player.score}, hands {self.player.playable_hands}')
+                
+            print(f'score {self.player.score}, hands {self.player.playable_hands}, cards {len(self.cards)}')
             
             self.player.reset_hand()
             stop_condition = self.evaulate_stop_condition(is_infinite=self.is_infinite, decrement_hand=self.is_infinite)
@@ -300,8 +433,8 @@ class Dealer():
         print(f'game ends with score {self.player.score} and reward {self.player.cumulative_reward}, hands {self.player.playable_hands}, cards {len(self.cards)}')
         
             
-dealer = Dealer(hands = 50000, is_infinite=True, training=True)
-dealer.get_decks(1)
+dealer = Dealer(hands = 10, is_infinite=False, training=True)
+dealer.get_decks(150)
 dealer.play_game()
 
     
