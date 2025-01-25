@@ -1,6 +1,5 @@
 \documentclass[aps,pre,superscriptaddress,twocolumn,longbibliography,10pt]{revtex4-2}
 
-% Common Package References
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{dcolumn}
@@ -22,20 +21,12 @@
 \usepackage{xcolor}
 \usepackage{xfrac}
 \usepackage{cleveref}
-\usepackage[numbers,sort&compress]{natbib}
-
-
-% Commenting commands
+\usepackage[sort&compress]{natbib}
 
 % Template below: replace 'initials' with your initials
 % \newcommand{\initials}[1]{{\color{magenta}{\bf [INITIALS: KR]}}}
 % Custom Commands
 \newcommand{\singlefigure}{0.45\textwidth}
-
-\bibliographystyle{unsrtnat}
-\bibliography{references}
-
-% Example citation
 
 
 \begin{document}
@@ -56,18 +47,17 @@
 \date{\today}
 
 \begin{abstract}
-\input{abstract} % Loads the abstract.tex file
+    \input{sections/abstract.tex}
 \end{abstract}
 
 \maketitle
-
 
 \input{sections/introduction}
 \input{sections/methodology}
 \input{sections/results}
 \input{sections/conclusions}
-% BIBLIOGRAPHY
-% \printbibliography
 
+\bibliography{references}
 \appendix
+
 \end{document}
