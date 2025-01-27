@@ -17,10 +17,15 @@ class Agent():
 
 
         #algorithm hyerparameters
-        self.alpha = 0.3
+        self.alpha = 1.0
         self.epislon = 0.3
         self.gamma = 0.9
         self.total_iter = playable_hands
+        #more hyperparameters
+        self.min_alpha = 0.01
+        self.max_alpha = 1.0
+        self.decay_rate = 0.01
+        self.episode = self.total_iter - self.playable_hands
     
     def update_q_table(self):
         raise NotImplementedError('update_q_table not implemented')
@@ -119,7 +124,12 @@ class Infinite_agent(Agent):
                     max_future_value = np.amax(self.q_table_infinite[new_state-2][self.unused_ace][action])
         
         #! 0.3 needs to change, make it a variable of the starting alpha
-        self.alpha = 0.3/(math.exp((self.total_iter-self.playable_hands)/self.total_iter))
+        #self.alpha = 0.3/(math.exp(self.playable_hands/self.total_iter))
+
+        #new implimentaion of decreasing alpha
+        self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.decay_rate * self.episode )
+
+
         #bellman eqaution 
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
             old_state_value + self.alpha*(reward + self.gamma*max_future_value - old_state_value)
