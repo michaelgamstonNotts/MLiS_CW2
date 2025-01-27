@@ -119,7 +119,7 @@ class Infinite_agent(Agent):
                     max_future_value = np.amax(self.q_table_infinite[new_state-2][self.unused_ace][action])
         
         #! 0.3 needs to change, make it a variable of the starting alpha
-        self.alpha = 0.3/(math.exp(self.playable_hands/self.total_iter))
+        self.alpha = 0.3/(math.exp((self.total_iter-self.playable_hands)/self.total_iter))
         #bellman eqaution 
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
             old_state_value + self.alpha*(reward + self.gamma*max_future_value - old_state_value)
@@ -170,7 +170,6 @@ class Infinite_agent(Agent):
         #! think of some better names here 
         for s_index, state in enumerate(self.q_table_infinite): 
             for u_index, unused_ace in enumerate(state):
-                print(s_index, u_index)
                 self.policy[s_index][u_index] = np.argmax(unused_ace)
                 
         np.save('infinite_policy.npy', self.policy)
@@ -249,6 +248,7 @@ class Finite_agent(Agent):
         else:
             new_card_value = new_card.value
         
+        print(self.loss_state)
         old_state = self.score
         new_state = old_state+new_card_value
         old_state_value = self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] 
@@ -273,7 +273,7 @@ class Finite_agent(Agent):
         self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] = \
             old_state_value + self.alpha*(reward + self.gamma*max_future_value - old_state_value)
             
-        print('q-table updated')
+        print(f'q-table updated at state {old_state-2},{self.loss_state},{self.unused_ace},{action}')
         
     def save_tables(self):
         np.save('finite_q_table.npy', self.q_table_finite)
@@ -318,6 +318,13 @@ class Dealer():
         deck = Deck()
         self.cards = np.array(deck.get_cards())
         
+        if self.is_infinite == False: 
+            for card_type in list(self.player.card_tracker.keys())[:-1]: 
+                self.player.card_tracker[card_type] = 4*num_deck
+            self.player.card_tracker[10] = 16*num_deck
+        print('card tracker')
+        print(self.player.card_tracker)
+        
         if num_deck == 1: 
             return
         elif num_deck > 1:
@@ -326,11 +333,7 @@ class Dealer():
         else: 
             raise Exception('Interger above 0 needed.')
         
-        if self.is_infinite == False: 
-            for card_type in list(self.player.card_tracker.keys())[:-1]: 
-                self.player.card_tracker[card_type] = 4*num_deck
-            self.player.card_tracker[10] = 16*num_deck
-
+        
         
     def hit(self, is_infinite = False) -> Card:
         """Gives the player a random card when requested. 
@@ -434,7 +437,7 @@ class Dealer():
         
             
 dealer = Dealer(hands = 10, is_infinite=False, training=True)
-dealer.get_decks(150)
+dealer.get_decks(1)
 dealer.play_game()
 
     
