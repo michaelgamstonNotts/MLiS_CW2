@@ -10,11 +10,35 @@ The Bellman's equations for Q-Learning is defined as,
 \end{multline}
 Where \( s, a \) are the current state and action,  \( s', a' \) are the next state and action, \( \alpha \) is the learning rate, \( \gamma \) is the discount factor, \( R(s,a) \) is the reward received after taking action \( a \) in state \( s \), and \( Q(s,a) \) is the q-value for the state-action pair. 
 
+
+
 Temporal difference somewhere. 
+
+Explain Q-tables and the inner functionality of learning in conjunction with the temporal difference. 
+
+alpha and how it decreases
+
+
+To train the model, Python and its basic libraries were employed, i.e., no machine learning libraries like Keras or Tensorflow. 
 
 \subsection{Infinite}
 
+In the "infinite" situation, the probability of each card being drawn is equal, so retaining prior knowledge of cards drawn poses no advantage, i.e., this situation is purely probabilistic. 
+
+The Q-table for the infinite situation is composed of the dimensions, 
+\begin{itemize}
+    \item Card count: 2-20
+    \item Held ace: Y/N
+    \item Action: Hit/Stick
+\end{itemize}
 
 
 \subsection{Finite}
-more boobs
+
+In the 'finite' situation, cards were drawn from a pile of finite number, meaning that the probability of drawing respective cards changed as the game progressed. This posed a new challenge which could ideally be solved by providing the agent with all previously dealt cards, from which it could learn to predict the probabilities of newly dealt cards, and so, how risk-adverse it should play. However, doing so would be at great computational cost, where the Q-table would need to incorporate the dimensions previously described, in addition to some combination of previously dealt cards. 
+
+To strike a balance between accuracy and potential advantage, the probability of 
+
+... consider other methods (like card counting)
+
+? average of recived cards???
