@@ -9,3 +9,5 @@ https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=6ba80f6366bcf7a85
 The optimum strategy in blackjack: https://web.williams.edu/Mathematics/sjmiller/public_html/341Fa09/handouts/Baldwin_OptimalStrategyBlackjack.pdf
 
 Reinforcement Learning: An introduction : https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf
+
+State space decomposition for RL: https://www.imperial.ac.uk/media/imperial-college/faculty-of-engineering/computing/public/2021-ug-projects/State-space-decomposition-for-Reinforcement-Learning.pdf

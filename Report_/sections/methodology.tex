@@ -1,8 +1,10 @@
 \section{Methodology}
 
-In training an agent to play Blackjack, an iterative Q-Learning approach has been taken. Watkins' Q-Learning aims to learn the optimal 'q-value' for given state-action pairs in an environment, i.e., the respective value of making a certain move in a certain environmental state. ... further description
+In training an agent to play Blackjack, an iterative Q-Learning approach was taken. Watkins' Q-Learning aims to learn the optimal 'q-value' for given state-action pairs in an environment, i.e., the respective value of making a certain move in a certain environmental state. ... further description
 
 This approach was selected because it does not require direct 
+
+Q-learning is a model-free, value-based, off-policy algorithm. Finite Markov Decision Process
 
 The Bellman's equations for Q-Learning is defined as,
 \begin{multline}
@@ -14,12 +16,20 @@ Where \( s, a \) are the current state and action,  \( s', a' \) are the next st
 
 Temporal difference somewhere. 
 
-Explain Q-tables and the inner functionality of learning in conjunction with the temporal difference. 
+Explain Q-tables and the inner functionality of learning in conjunction with the temporal difference. State space, representing all configurations of the game. 
 
 alpha and how it decreases
 
+Define reward
+
+\begin{equation} \label{reward}
+    R(s,a) = S + \delta_{\Delta A}
+\end{equation}
+    
+To obtain the optimal policy, \[\pi^*\], 
 
 To train the model, Python and its basic libraries were employed, i.e., no machine learning libraries like Keras or Tensorflow. 
+
 
 \subsection{Infinite}
 
@@ -32,6 +42,7 @@ The Q-table for the infinite situation is composed of the dimensions,
     \item Action: Hit/Stick
 \end{itemize}
 
+In this situation, episodes are defined as hands. 
 
 \subsection{Finite}
 
@@ -42,3 +53,5 @@ To strike a balance between accuracy and potential advantage, the probability of
 ... consider other methods (like card counting)
 
 ? average of recived cards???
+
+find a reference that justifies using a decreasing alpha for probabilistic problems. 
