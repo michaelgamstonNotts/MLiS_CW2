@@ -18,7 +18,7 @@ class Agent():
         #algorithm hyperparameters
         self.alpha = 1.0
         self.epislon = 0.3
-        self.gamma = 0.7
+        self.gamma = 0.1
         self.total_iter = playable_hands
         
         self.min_alpha = 0.01
@@ -144,6 +144,13 @@ class Infinite_agent(Agent):
         #calculates old state, the new state and the value of the old state 
         old_state = self.score
         new_state = old_state+new_card_value
+        
+        #fixed aces bug 
+        #keep state of ace to be what it was before the change 
+        #this is to allow correct switching  between the no ace and ace side of the q -table
+        if used_an_ace: 
+            old_state+=10
+            
         old_state_value = self.q_table_infinite[old_state-2][self.unused_ace][action] 
         
         #check if the new state is over 21
@@ -170,7 +177,6 @@ class Infinite_agent(Agent):
 
         #decreasing alpha
         self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.decay_rate * self.episode )
-
 
         #bellman eqaution 
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
@@ -199,8 +205,7 @@ class Infinite_agent(Agent):
         
 
         if training == True: 
-            #get q value for hit and stick
-            
+            #get q value for hit and stick       
             #try:
             stick_q = self.q_table_infinite[self.score-2][self.unused_ace][0]
             hit_q = self.q_table_infinite[self.score-2][self.unused_ace][1]
