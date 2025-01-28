@@ -2,29 +2,28 @@ from card import Deck, Card
 import numpy as np
 import math
 import copy
-#hello
+
 class Agent():
-    """A class for the agent that plays blackjack 
-    will contain q learning 
+    """
+    A class for the agent that plays blackjack 
     """
     
     def __init__(self, playable_hands : int):
-        self.playable_hands = playable_hands #decreases as hands depleat (used for infinite agent)
+        self.playable_hands = playable_hands #decreases as hands deplete (used for infinite agent)
         self.unused_ace = 0 #flag to track if hand has an unused ace
         self.hand = [] #list of cards in current hand 
         self.score = 0 #current hand score 
         self.cumulative_reward = 0 #cumulative reward over all hands (not currently tracked)
 
-
-        #algorithm hyerparameters
+        #algorithm hyperparameters
         self.alpha = 1.0
         self.epislon = 0.3
         self.gamma = 0.7
         self.total_iter = playable_hands
-        #more hyperparameters
+        
         self.min_alpha = 0.01
         self.max_alpha = 1.0
-        self.decay_rate = 0.01
+        self.decay_rate = 0.04
         self.episode = self.total_iter - self.playable_hands
     
     #to be overwritten by child classes 
@@ -35,17 +34,18 @@ class Agent():
     def assess(self):
         raise NotImplementedError('assess not implemented')
         
-    
     def check_for_unused_ace(self) -> None:
-        """Checks if there is an unused ace present in the hand 
-        sets the unused_ace flag to one if ace present 
         """
-        aces = [card for card in self.hand if (card.type == 'Ace') and (card.value == 11)]
-        if len(aces) > 0:
+        Checks if there is an unused ace present in the hand and 
+        sets the unused_ace flag to one if ace present.
+        """
+        unused_ace_ = [card for card in self.hand if (card.type == 'Ace') and (card.value == 11)]
+        if len(unused_ace_) > 0:
             self.unused_ace = 1
                 
     def change_ace_value(self) -> None:
-        """finds the first unused ace in hand and changes it's value down to 1
+        """
+        Finds the first unused ace in hand and drops its value down to 1.
         """
         for card in self.hand:
             if (card.type == 'Ace') and (card.value == 11):
@@ -55,8 +55,9 @@ class Agent():
         print('changed ace value')
         
     def hit(self, new_card : Card, training=False) -> None:
-        """recieves new card and adds it to the hand 
-        if training == true then it also updates the Q - table
+        """
+        Recieves a new card and adds it to the hand.
+        if training == true, then it also updates the Q - table.
 
         Args:
             new_card (Card): new card received from the dealer 
@@ -64,77 +65,73 @@ class Agent():
         """
         #calculates the new total hand value (stores locally)
         new_score = new_card.value + self.score
-        #checks if training and if the new total is below 21 
         
-        if training:
-            if (new_score < 22): 
-                #if new total is 21 then give the update q -table function the win_case boolean 
-                if new_score == 21: 
-                    print('yes?')
+        if training == True:
+            #If the new score either wins or continues the game,
+            if new_score <= 21: 
+                if new_score == 21: #hits 21, update q table with a win condition.
                     self.update_q_table(new_card = new_card, action = 1, win_case = True)
-                else: 
-                #if new score 20 or below then update the q-table accordingly
-                    self.update_q_table(new_card, 1)
-                    
-            #if training and score is 22 and over, and the new card is an ace 
-            elif new_card.type == 'Ace':
-                
-                #decrement value of ace 
-                new_card.change_value(1)
-                #recalculate new_score 
-                new_score = new_card.value + self.score
-                #if new_score is 21 then game over max reward 
-                if new_score == 21:
-                    self.update_q_table(new_card = new_card, action = 1, win_case = True)
-                #other wise proceed as normal
-                if new_score < 21:
+                else: #below 21, update q table without a win condition.
                     self.update_q_table(new_card = new_card, action = 1)
                     
-            # if training and new score is 22 and over 
-            else:
-                #check if the hand has an unused ace
-                if self.unused_ace: 
-                    #if we have one, find it and decrement it's value
-                    self.change_ace_value()
-                    #keep the flag untill after the q-table is updated so we update the correct side
+            #If the new score exceeds the score limit, and the NEW card IS an ace,
+            elif new_score > 21 and new_card.type == 'Ace':
+                
+                new_card.change_value(1) #Drop ace value from 11 to 1.
+                new_score = new_card.value + self.score #Recalculate score.
+                
+                if new_score == 21: #hits 21, update q table with a win condition.
+                    self.update_q_table(new_card = new_card, action = 1, win_case = True)
+                if new_score < 21: #below 21, update q table without a win condition.
+                    self.update_q_table(new_card = new_card, action = 1)
+                    
+            #If the new score exceeds the score limit, and the NEW card IS NOT an ace,
+            elif new_score > 21 and new_card.type != 'Ace':
+                if self.unused_ace: #If there is an unused ace,
+                    
+                    self.change_ace_value() #Drop value of previous ace.
+                    #Keep the flag = 1 while the q-table is updated so the correct side is updated.
                     self.unused_ace = 1
                     self.update_q_table(new_card = new_card, action = 1, win_case = False, used_an_ace = True)
-                    #unassign flag 
                     self.unused_ace = 0 
-                else:
-                    #if not ace then update the q-table accordingly 
+                    
+                else: #If there is not an unused ace,
                     self.update_q_table(new_card = new_card, action = 1, win_case = False)
-            
-        # add the cards to our hand and update score check for unused ace 
+
+        #Adds the new card to the current score and hand. 
         self.score += new_card.value
         self.hand.append(new_card)
         self.check_for_unused_ace()
         
     def reset_hand(self) -> None:
-        """resest the hand at the start of a new hand 
+        """
+        Reset the hand at the start of a new hand.
         """
         self.hand = []
         self.score = 0
         self.unused_ace = 0
         
-    #to be overwritten by child classes
+    #To be overwritten by child classes
     def save_tables(self):
         raise NotImplementedError('save_tables not implemented')
-        
+ 
+
+       
 class Infinite_agent(Agent):
     
     def __init__(self, hands : int) -> None:
         super().__init__(hands)
-        self.q_table_infinite = np.zeros([19,2,2]) # q-table
-        self.policy = None # empty policy 
+        self.q_table_infinite = np.zeros([19,2,2]) #Q-table
+        self.policy = None #Empty Policy
                
     def update_q_table(self, new_card : Card, action : int, win_case = False, used_an_ace = False) -> None:
-        """used to update the the q-table in case of an infinite agent 
+        """
+        Used to update the the q-table in case of an infinite agent 
 
         Args:
-            new_card (Card): the card receievd from dealer (is None if agent sticks)
-            action (int): 0 for stick 1 for hit
-            win_case (bool, optional): special use case for the new state is determined to be 21. Defaults to False.
+            new_card (Card): The card receievd from the dealer (None if agent sticks)
+            action (int): 0 for stick, 1 for hit
+            win_case (bool, optional): Special use case for the new state is determined to be 21. Defaults to False.
             used_an_ace (bool, optional): special use case for if and ace has been decremenetd in hit(). Defaults to False.
         """
         
@@ -182,11 +179,12 @@ class Infinite_agent(Agent):
         print('q-table updated')
         
     def assess(self, training = False) -> str:
-        """when training this returns an action based on and epsilon greedy algorithm 
-        when not training this picks the best action according to the q-table
+        """
+        When training, this function returns an action based on an Epsilon-greedy algorithm.
+        When not training, this function picks the best action according to the Policy (defined during training).
 
         Args:
-            training (bool, optional): training use case. Defaults to False.
+            training (bool, optional): training use case, defaults to False.
 
         Raises:
             e: file not found error
@@ -199,10 +197,9 @@ class Infinite_agent(Agent):
         #map to change ints to strs 
         action_int_to_str = {0:'stick', 1:'hit'}
         
-        # for training only 
-        if training: 
+
+        if training == True: 
             #get q value for hit and stick
-            
             
             #try:
             stick_q = self.q_table_infinite[self.score-2][self.unused_ace][0]
@@ -213,10 +210,9 @@ class Infinite_agent(Agent):
             #     print(*self.hand)
             #     raise e
             
-            #check if they are equal
-            if stick_q == hit_q:
-                #choose random action is yes
-                action = np.random.randint(0,2)
+
+            if stick_q == hit_q: #If stick and hit are equal, 
+                action = np.random.randint(0,2) #pick random move.
             else:
                 #else run epsilon greedy to find action 
                 if self.epislon > np.random.random():
@@ -226,8 +222,7 @@ class Infinite_agent(Agent):
             
             return action_int_to_str[action]
         
-        else: 
-            #for no training reference policy table 
+        if training == False: 
             try:
                 #load policy table if not done
                 if type(self.policy) != np.ndarray: 
