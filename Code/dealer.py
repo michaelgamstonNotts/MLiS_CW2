@@ -134,14 +134,13 @@ class Infinite_agent(Agent):
             win_case (bool, optional): Special use case for the new state is determined to be 21. Defaults to False.
             used_an_ace (bool, optional): special use case for if and ace has been decremenetd in hit(). Defaults to False.
         """
-        
-        #check if there is a new card or not
+    
         if new_card == None: 
             new_card_value = 0
         else:
             new_card_value = new_card.value
         
-        #calculates old state, the new state and the value of the old state 
+        #Calculates old state, the new state and the value of the old state 
         old_state = self.score
         new_state = old_state+new_card_value
         
@@ -153,36 +152,29 @@ class Infinite_agent(Agent):
             
         old_state_value = self.q_table_infinite[old_state-2][self.unused_ace][action] 
         
-        #check if the new state is over 21
-        if new_state > 21:
-            #if yes then the agent recieves no reward and no future rewards 
+        if new_state > 21: #If the new score exceeds the score limit,
             reward = 0
             max_future_value = 0
-        #if new state within bounds 
-        else:
-            #calculate the new reward based on action (if 0 reward = current state**2 isf 1 rewards = new state**2)
-            reward = new_state**2 if action == 1 else self.score**2 
-            if win_case or (action == 0): 
-                #if the agent has got 21 or sticks then there is no future reward to get 
+            
+        elif new_state <= 21: #If the new score is within the score limit,
+            reward = new_state**2 if action == 1 else self.score**2 #calculate score based on move.
+            if win_case or action == 0: #If the game is won, or the agent has stuck,
                 max_future_value = 0
-            elif action == 1:
-                #if the agents hits and does not get 21 
+            elif action == 1: #If the agent hits and does not win,
                 if used_an_ace:
-                    #if special ace use case activate (and unused ace flad still set to 1) get max future reward from the no ace side of the table 
+                    #If an ace has been used this move, then get the max future value from the No Ace side of the Q-table.
                     max_future_value = np.amax(self.q_table_infinite[new_state-2][0][action])
-                else:
-                    #other wise get it from the same side of the table
+                else: 
+                    #Otherwise, get the max future value from the same side of the Q-table.
                     max_future_value = np.amax(self.q_table_infinite[new_state-2][self.unused_ace][action])
         
-
-        #decreasing alpha
+        #Recalculate alpha,
         self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.decay_rate * self.episode )
 
-        #bellman eqaution 
+        #Bellman eqaution, used to calculate new Q-values in the Q-table,
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
-            old_state_value + self.alpha*(reward + self.gamma*max_future_value - old_state_value)
-            
-        print('q-table updated')
+                    old_state_value + self.alpha*(reward + self.gamma*max_future_value - old_state_value)
+        print('Updated Q-table')
         
     def assess(self, training = False) -> str:
         """
@@ -200,10 +192,9 @@ class Infinite_agent(Agent):
             str: the decided action 
         """
         
-        #map to change ints to strs 
+        #Maps integer moves to their respective strings.
         action_int_to_str = {0:'stick', 1:'hit'}
         
-
         if training == True: 
             #get q value for hit and stick       
             #try:
@@ -215,32 +206,27 @@ class Infinite_agent(Agent):
             #     print(*self.hand)
             #     raise e
             
-
             if stick_q == hit_q: #If stick and hit are equal, 
                 action = np.random.randint(0,2) #pick random move.
-            else:
-                #else run epsilon greedy to find action 
+            else: #Otherwise, run Epsilon-greedy algorithm to pick the next move.
                 if self.epislon > np.random.random():
                     action = np.argmin(self.q_table_infinite[self.score-2][self.unused_ace])
                 else:
                     action = np.argmax(self.q_table_infinite[self.score-2][self.unused_ace])
-            
             return action_int_to_str[action]
         
         if training == False: 
-            try:
-                #load policy table if not done
+            try: #Load policy file if it is not already defined in self.policy.
                 if type(self.policy) != np.ndarray: 
                     self.policy = np.load('infinite_policy.npy')
-            except FileNotFoundError as e:
-                #if no policy can be found throw error
+            except FileNotFoundError as e: #Throw error if no policy file can be found.
                 print(e)
                 raise RuntimeError('Training required to create policy table.')
-            
             return action_int_to_str[self.policy[self.score-2][self.unused_ace]]
         
     def save_tables(self) -> None:
-        """saves policy and q-tables and the end of training
+        """
+        Saves policy and q-tables and the end of training
         """
         np.save('infinite_q_table.npy', self.q_table_infinite)
         self.policy = np.zeros([19,2])
@@ -250,7 +236,9 @@ class Infinite_agent(Agent):
                 self.policy[s_index][u_index] = np.argmax(unused_ace)
                 
         np.save('infinite_policy.npy', self.policy)
-        
+
+
+
 class Finite_agent(Agent):
     
     def __init__(self, hands):
@@ -388,11 +376,13 @@ class Finite_agent(Agent):
                     self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
                 
         np.save('finite_policy.npy', self.policy)
-              
+
+
+       
 class Dealer(): 
-    """A class for the dealer of the blackjack game 
-    this is a passive dealer. 
-    The dealer runs the game.
+    """
+    A class for the (passive) dealer of the blackjack game.
+    The dealer essentially runs the game.
     """
     
     def __init__(self, hands : int, is_infinite = False, training = False) -> None:
@@ -561,7 +551,7 @@ class Dealer():
             self.player.save_tables()      
             
         #printing stats (not needed by helpful for debugging)
-        print(f'game ends with score {self.player.score} and reward {self.player.cumulative_reward}, hands {self.player.playable_hands}, cards {len(self.cards)}')
+        print(f'Game ends with {self.player.score} score, and {self.player.cumulative_reward} reward,\n Hands: {self.player.playable_hands}, card count: {len(self.cards)}')
         if self.is_infinite == False: 
             for x,i in enumerate(self.player.loss_state_tracker):
                 print(f'{x} - {i}')
@@ -570,9 +560,3 @@ class Dealer():
 dealer = Dealer(hands = 50000, is_infinite=True, training=True)
 dealer.get_decks(1000)
 dealer.play_game()
-
-    
-    
-        
-
-        
