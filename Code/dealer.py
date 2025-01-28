@@ -23,7 +23,7 @@ class Agent():
         
         self.min_alpha = 0.01
         self.max_alpha = 1.0
-        self.decay_rate = 0.04
+        self.decay_rate = 5
         self.episode = self.total_iter - self.playable_hands
     
     #to be overwritten by child classes 
@@ -111,18 +111,17 @@ class Agent():
         self.score = 0
         self.unused_ace = 0
         
-    #To be overwritten by child classes
     def save_tables(self):
+        #To be overwritten by child classes
         raise NotImplementedError('save_tables not implemented')
  
 
        
 class Infinite_agent(Agent):
-    
     def __init__(self, hands : int) -> None:
         super().__init__(hands)
-        self.q_table_infinite = np.zeros([19,2,2]) #Q-table
-        self.policy = None #Empty Policy
+        self.q_table_infinite = np.zeros([19,2,2])  #Q-table
+        self.policy = None                          #Empty Policy
                
     def update_q_table(self, new_card : Card, action : int, win_case = False, used_an_ace = False) -> None:
         """
@@ -168,9 +167,12 @@ class Infinite_agent(Agent):
                     #Otherwise, get the max future value from the same side of the Q-table.
                     max_future_value = np.amax(self.q_table_infinite[new_state-2][self.unused_ace][action])
         
+        
+        self.episode = self.total_iter - self.playable_hands
         #Recalculate alpha,
-        self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.decay_rate * self.episode )
-
+        #self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.decay_rate * self.episode )
+        self.alpha = math.exp(-(self.decay_rate/self.total_iter)*self.episode)
+        print('!!!!',self.alpha)
         #Bellman eqaution, used to calculate new Q-values in the Q-table,
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
                     old_state_value + self.alpha*(reward + self.gamma*max_future_value - old_state_value)
