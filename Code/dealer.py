@@ -19,12 +19,12 @@ class Agent():
         #algorithm hyerparameters
         self.alpha = 1.0
         self.epislon = 0.3
-        self.gamma = 0.1
+        self.gamma = 0.7
         self.total_iter = playable_hands
         #more hyperparameters
         self.min_alpha = 0.01
         self.max_alpha = 1.0
-        self.decay_rate = 0.01
+        self.decay_rate = 0.045
         self.episode = self.total_iter - self.playable_hands
     
     #to be overwritten by child classes 
@@ -122,6 +122,12 @@ class Agent():
         raise NotImplementedError('save_tables not implemented')
         
 class Infinite_agent(Agent):
+    """
+    A agent to learn the infinite version of black jack usuing q-learning 
+
+    Args:
+        Agent (Agent): Parent class 
+    """
     
     def __init__(self, hands : int) -> None:
         super().__init__(hands)
@@ -256,6 +262,11 @@ class Infinite_agent(Agent):
         np.save('infinite_policy.npy', self.policy)
         
 class Finite_agent(Agent):
+    """An agent to play the finite version of the game
+
+    Args:
+        Agent (Agent): the parent class 
+    """
     
     def __init__(self, hands):
         super().__init__(hands)
