@@ -18,7 +18,7 @@ class Agent():
         #algorithm hyperparameters
         self.alpha = 1.0
         self.epislon = 0.3
-        self.gamma = 0.1
+        self.gamma = 0.7
         self.total_iter = playable_hands
         
         self.min_alpha = 0.01
@@ -118,6 +118,13 @@ class Agent():
 
        
 class Infinite_agent(Agent):
+    """
+    A agent to learn the infinite version of black jack usuing q-learning 
+
+    Args:
+        Agent (Agent): Parent class 
+    """
+    
     def __init__(self, hands : int) -> None:
         super().__init__(hands)
         self.q_table_infinite = np.zeros([19,2,2])  #Q-table
@@ -242,16 +249,25 @@ class Infinite_agent(Agent):
 
 
 class Finite_agent(Agent):
+    """An agent to play the finite version of the game
+
+    Args:
+        Agent (Agent): The parent class 
+    """
     
     def __init__(self, hands):
         super().__init__(hands)
-        self.q_table_finite = np.zeros([19,10,2,2])
-        self.policy = None
-        self.card_tracker = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0}
-        self.loss_state = 0
-        self.loss_state_tracker = np.zeros(10)
+        self.q_table_finite = np.zeros([19,10,2,2]) # q-table 
+        self.policy = None # empty policy 
+        self.card_tracker = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0} # card tracking for calculating probabilities (filled during play through)
+        self.loss_state = 0 # variable to track the calculate probabilty of lossing
+        self.loss_state_tracker = np.zeros(10) # for debugging, will delete before hand in 
                
-    def calculate_probability_of_loss(self):
+    def calculate_probability_of_loss(self) -> None:
+        """This calculates the probability that the next card will make the agent loose
+        """
+        
+        #! subject to change 
         
         total_number_cards = sum(self.card_tracker.values())
         #find the minimum score that will make the agent lose 
@@ -292,7 +308,21 @@ class Finite_agent(Agent):
         #self.loss_state = int(round((numerator / total_number_cards), 2)*100)
         print(f'- loss_state {self.loss_state}')
         
-    def assess(self, training):
+    def assess(self, training = False) -> None:
+        """
+        When training, this function returns an action based on an Epsilon-greedy algorithm.
+        When not training, this function picks the best action according to the Policy (defined during training).
+
+        Args:
+            training (bool, optional): training use case, defaults to False.
+
+        Raises:
+            e: file not found error
+            RuntimeError: raises error is no policy table has been computed and training is still required
+
+        Returns:
+            str: the decided action 
+        """
         
         action_int_to_str = {0:'stick', 1:'hit'}
         # for training only 
@@ -300,6 +330,7 @@ class Finite_agent(Agent):
         
         if training: 
             #get q value for hit and stick
+            #! remove the try statement before hand in 
             try:
                 stick_q = self.q_table_finite[self.score-2][self.loss_state][self.unused_ace][0]
                 hit_q = self.q_table_finite[self.score-2][self.loss_state][self.unused_ace][1]
@@ -333,16 +364,30 @@ class Finite_agent(Agent):
             return action_int_to_str[self.policy[self.score-2][self.loss_state][self.unused_ace]]
         
     def update_q_table(self, new_card : Card, action : int, win_case = False, used_an_ace = False):
+        """
+        Used to update the the q-table in case of an finite agent 
+
+        Args:
+            new_card (Card): The card receievd from the dealer (None if agent sticks)
+            action (int): 0 for stick, 1 for hit
+            win_case (bool, optional): Special use case for the new state is determined to be 21. Defaults to False.
+            used_an_ace (bool, optional): special use case for if and ace has been decremenetd in hit(). Defaults to False.
+        """
         
-        #! update win case 
         if new_card == None: 
             new_card_value = 0
         else:
             new_card_value = new_card.value
         
-        print(self.loss_state)
         old_state = self.score
         new_state = old_state+new_card_value
+        
+        #fixed aces bug 
+        #keep state of ace to be what it was before the change 
+        #this is to allow correct switching  between the no ace and ace side of the q -table
+        if used_an_ace: 
+            old_state+=10
+            
         old_state_value = self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] 
         
         if new_state > 21:
@@ -369,6 +414,9 @@ class Finite_agent(Agent):
         print(f'q-table updated at state {old_state-2},{self.loss_state},{self.unused_ace},{action}')
         
     def save_tables(self):
+        """
+        Saves policy and q-tables and the end of training
+        """
         np.save('finite_q_table.npy', self.q_table_finite)
         self.policy = np.zeros([19,10,2])
         #! think of some better names here 
