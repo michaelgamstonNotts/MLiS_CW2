@@ -1,20 +1,20 @@
 \section{Methodology}
 
-In training an agent to play Blackjack, an iterative Q-Learning approach was taken. Watkins' Q-Learning aims to learn the optimal 'q-value' for given state-action pairs in an environment, i.e., the respective value of making a certain move in a certain environmental state. ... further description
+In training an agent to play Blackjack, an iterative Q-Learning approach was taken. Watkins' Q-Learning aims to learn the optimal 'q-value' for given state-action pairs in an environment, i.e., the respective value of making a certain move in a certain environmental state. This approach was chosen because it is a model-free, value-based, off-policy algorithm, essentially meaning that it would formulate an optimal policy without much prior 
+
+Q-learning relies on Markov Decision Processes, which enable the probabilistic nature of Blackjack to be realised by the model. 
+
+... further description
 
 This approach was selected because it does not require direct 
 
-Q-learning is a model-free, value-based, off-policy algorithm. Finite Markov Decision Process
 
 The Bellman's equations for Q-Learning is defined as,
 \begin{multline}
     Q_{new}(s,a)=Q_{old}(s,a)+\\\alpha(\underbrace{R(s,a)+\gamma MaxQ(s',a')-Q_{old}(s,a)}_{\mathclap{\text{Temporal Difference}}})
 \end{multline}
-Where \( s, a \) are the current state and action,  \( s', a' \) are the next state and action, \( \alpha \) is the learning rate, \( \gamma \) is the discount factor, \( R(s,a) \) is the reward received after taking action \( a \) in state \( s \), and \( Q(s,a) \) is the q-value for the state-action pair. 
+Where \( s, a \) are the current state and action,  \( s', a' \) are the next state and action, \( \alpha \) is the learning rate, \( \gamma \) is the discount factor, \( R(s,a) \) is the reward received after taking action \( a \) in state \( s \), and \( Q(s,a) \) is the q-value for the state-action pair. EXPLAIN TEMPORAL DIFFERENCE. EXPLAIN LEARNING RATE (pros and cons of high and low)
 
-
-
-Temporal difference somewhere. 
 
 Explain Q-tables and the inner functionality of learning in conjunction with the temporal difference. State space, representing all configurations of the game. 
 
@@ -29,6 +29,7 @@ Define reward
 To obtain the optimal policy, \[\pi^*\], 
 
 To train the model, Python and its basic libraries were employed, i.e., no machine learning libraries like Keras or Tensorflow. 
+
 
 
 \subsection{Infinite}

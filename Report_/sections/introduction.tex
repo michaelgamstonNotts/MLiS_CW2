@@ -1,20 +1,18 @@
 \section{Introduction}
 
-Blackjack, also known as twenty-one, is the most widely played casino game in the world, largely due to its simple game structure in which a player attempts to get the highest score by drawing cards from a deck. With its long history, various strategies for increasing a players chance of winning, such as card counting, are commonplace. Whilst an optimum strategy for blackjack has been known by statisticians for decades, by drawing on the expected value of future cards \cite{Baldwin01091956}, training an intelligent agent to learn the optimum strategy is an approach not as often taken. Using intelligent agents like this is known within machine learning communities as 'reinforcement learning'. The advantage of taking a reinforcement learning approach in this circumstance is rooted in its theorem proving nature, i.e., it can validate or indicate mathematical frameworks behind a system \cite{bidi2023reinforcementlearningcontroltheory}.
+Blackjack, also known as twenty-one, is the most widely played casino game in the world, largely due to its simple game structure in which a player attempts to get the highest score by drawing cards from a deck. With its long history, various strategies for increasing a players chance of winning, such as card counting, are commonplace. Whilst an optimum strategy for blackjack has been known by statisticians for decades, by drawing on the expected value of future cards \cite{Baldwin01091956}, training an intelligent agent to learn the optimum strategy is an approach not as often taken. Using intelligent agents like this is known within machine learning communities as 'reinforcement learning'. The advantage of taking a reinforcement learning approach in this circumstance is rooted in the stochastic nature of blackjack, in which long term reward is prioritised. Additionally, its theorem proving nature offers extra insight, i.e., it can validate or indicate mathematical frameworks behind a system \cite{bidi2023reinforcementlearningcontroltheory}. 
 
 \smallskip
-Reinforcement Learning is a subfield of machine learning concerned with teaching an 'agent' to find an optimal set of moves in the context of a wider system. The foundational components compose a policy - mapping possible states to possible actions, a reward signal - defining the agent's goal, an environment - which the agent interacts with, and a value function - indicating the long-term desirability of a sequence of states . A reinforcement learning task is considered a Markov Decision Processes (MDP) if it satisfies the Markov property, defined as the exclusive reliance of the likelihood of changing to a specific state on the present state and elapsed time,  not on previous states. MDPs are used in sequential deicion making in probabilistic systems. \cite{10.5555/3312046}
+Reinforcement Learning is a subfield of machine learning concerned with teaching an 'agent' to find an optimal set of moves in the context of a wider system. The foundational components compose a policy - mapping possible states to possible actions, a reward signal - defining the agent's goal, an environment - which the agent interacts with, and a value function - indicating the long-term desirability of a sequence of states. A reinforcement learning task is considered a Markov Decision Processes (MDP) if it satisfies the Markov property, defined as the exclusive reliance of the likelihood of changing to a specific state on the present state and elapsed time, and not on previous states. MDPs are used in sequential decision-making in probabilistic systems \cite{10.5555/3312046}.
 
-
-
-Given a finite MDP with state \(s\) and action \(a\), the probability of each following state and reward pair is given by
-\begin{multline}
-    p(a',r|s,a)=\\\text{Pr}\{S_{t+1}=s',R_{t+1}=r|S_t=s,A_t=a\}.
-\end{multline}
-Which entirely specifies the dynamics of the system.
+%Given a finite MDP with state \(s\) and action \(a\), the probability of each following state and reward pair is given by
+% \begin{multline}
+%     p(a',r|s,a)=\\\text{Pr}\{S_{t+1}=s',R_{t+1}=r|S_t=s,A_t=a\}.
+% \end{multline}
+% Which entirely specifies the dynamics of the system.
 
 \smallskip
-There are many variations to the game, typically involving multiple players and a dealer, but for the purposes of this project the sequence of play was as follows: NOTE ACES RULE
+There are many variations to Blackjack, typically involving multiple players and a dealer, but for the purposes of this project the sequence of play was as follows: NOTE ACES RULE
 
 \begin{enumerate}
     \item A card is dealt to the player with value \(C_1\).
@@ -33,7 +31,5 @@ There are many variations to the game, typically involving multiple players and 
         \end{equation}
 \end{enumerate}
 
-To approach this problem, two situations were considered; infinite, in which the pile of cards being drawn from is infinite and so, the probability of each card being drawn is equal, and finite, in which the pile of cards being drawn from is finite, meaning unequal probabilities. Doing so allowed for assurance that the agent worked appropriately. 
-
-This paper details the methodology taken for both problem situations, the results of each in context of an optimal result, and a conclusion on the efficacy of this approach.
+To approach this problem, two situations were considered. Infinite, in which the pile of cards being drawn from is infinite, meaning the probability of each card being drawn is equal, and finite, in which the pile of cards being drawn from is finite, meaning unequal probabilities. These two approaches were taken to provide a broad spectrum of results. This paper details the methodology taken for both problem situations, the results of each in context of an optimal result, and a conclusion on the efficacy of this approach.
 

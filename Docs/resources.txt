@@ -11,3 +11,5 @@ The optimum strategy in blackjack: https://web.williams.edu/Mathematics/sjmiller
 Reinforcement Learning: An introduction : https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf
 
 State space decomposition for RL: https://www.imperial.ac.uk/media/imperial-college/faculty-of-engineering/computing/public/2021-ug-projects/State-space-decomposition-for-Reinforcement-Learning.pdf
+
+Google Scholar, Reinforcement Learning blackjack: https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=reinforcement+learning+blackjack&oq=reinforcement+learning+black
