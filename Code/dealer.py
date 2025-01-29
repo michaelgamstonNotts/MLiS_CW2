@@ -27,9 +27,15 @@ class Agent():
         self.episode = self.total_iter - self.playable_hands
         
         self.alpha_tracking = np.zeros(playable_hands)
+        self.sumOfHand_tracking = np.zeros(playable_hands)
         
     def update_tracking(self): 
         self.alpha_tracking[self.total_iter - self.playable_hands] = self.alpha
+        self.sumOfHand_tracking[self.total_iter - self.playable_hands] = self.score
+
+    def save_tracking(self):
+        np.save("tracking/alpha_tracking_data.npy",self.alpha_tracking)
+        np.save("tracking/hand_sum_tracking_data.npy",self.sumOfHand_tracking)
     
     #to be overwritten by child classes 
     def update_q_table(self):
@@ -617,6 +623,10 @@ class Dealer():
         if self.is_infinite == False: 
             for x,i in enumerate(self.player.loss_state_tracker):
                 print(f'{x} - {i}')
+
+
+        self.player.save_tracking()
+        
         
             
 dealer = Dealer(hands = 50000, is_infinite=True, training=True)
