@@ -558,8 +558,8 @@ class Dealer():
             cards_left = len(self.cards)
             if cards_left == 0:
                 if self.training:
-                    if self.player.training_epochs != 0:
-                        self.player.training_epochs -= 1
+                    if self.player.epsiodes != 0:
+                        self.player.epsiodes -= 1
                         self.get_decks(self.num_decks)
                         stop_condition = len(self.cards)
                         return stop_condition
