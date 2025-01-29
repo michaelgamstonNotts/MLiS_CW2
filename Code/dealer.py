@@ -16,14 +16,14 @@ class Agent():
         self.cumulative_reward = 0 #cumulative reward over all hands (not currently tracked)
 
         #algorithm hyperparameters
-        self.alpha = 0.1
+        self.alpha = 0
         self.epislon = 0.1
         self.gamma = 1
         self.total_iter = playable_hands
         
         self.min_alpha = 0.01
         self.max_alpha = 1.0
-        self.decay_rate = 5
+        self.alpha_decay_rate = 0.2 
         self.episode = self.total_iter - self.playable_hands
         
         self.alpha_tracking = np.zeros(playable_hands)
@@ -186,9 +186,8 @@ class Infinite_agent(Agent):
         
         
         #Recalculate alpha,
-        #self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.decay_rate * self.episode )
-        self.alpha = math.exp(-(self.decay_rate/self.total_iter)*(self.total_iter - self.playable_hands))
-        print('!!', self.alpha)
+        #self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.alpha_decay_rate * self.episode )
+        self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp(-(1/(self.alpha_decay_rate*self.total_iter))*(self.total_iter - self.playable_hands))
     
         
         #Bellman eqaution, used to calculate new Q-values in the Q-table,
