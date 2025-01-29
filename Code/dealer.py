@@ -150,11 +150,16 @@ class Infinite_agent(Agent):
         old_state = self.score
         new_state = old_state+new_card_value
         
+        #delta, take points from reward when we regress from loosing an ace 
+        delta = 0
         #fixed aces bug 
         #keep state of ace to be what it was before the change 
-        #this is to allow correct switching  between the no ace and ace side of the q -table
+        #this is to allow correct switching between the no ace and ace side of the q -table
         if used_an_ace: 
             old_state+=10
+            delta = old_state**2 - self.score**2
+            #print(old_state, self.score)
+            
             
         old_state_value = self.q_table_infinite[old_state-2][self.unused_ace][action] 
         
@@ -179,10 +184,11 @@ class Infinite_agent(Agent):
         #self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.decay_rate * self.episode )
         self.alpha = math.exp(-(self.decay_rate/self.total_iter)*(self.total_iter - self.playable_hands))
         print('!!', self.alpha)
+    
         
         #Bellman eqaution, used to calculate new Q-values in the Q-table,
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
-                    old_state_value + self.alpha*(reward + self.gamma*max_future_value - old_state_value)
+                    old_state_value + self.alpha*((reward + self.gamma*max_future_value - old_state_value)- delta) 
         print('Updated Q-table')
         
     def assess(self, training = False) -> str:
