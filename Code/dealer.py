@@ -25,6 +25,11 @@ class Agent():
         self.max_alpha = 1.0
         self.decay_rate = 5
         self.episode = self.total_iter - self.playable_hands
+        
+        self.alpha_tracking = np.zeros(playable_hands)
+        
+    def update_tracking(self): 
+        self.alpha_tracking[self.total_iter - self.playable_hands] = self.alpha
     
     #to be overwritten by child classes 
     def update_q_table(self):
@@ -593,7 +598,8 @@ class Dealer():
                         self.player.update_q_table(new_card = None, action = 0)
                     print(f'player sticks with score {self.player.score} and reward {self.player.cumulative_reward}')
                     break
-                
+            
+            self.player.update_tracking() 
             #print stats at the end of the hand
             print(f'score {self.player.score}, hands {self.player.playable_hands}, cards {len(self.cards)}')
             #reset the hand
