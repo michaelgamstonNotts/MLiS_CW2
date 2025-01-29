@@ -249,7 +249,8 @@ class Infinite_agent(Agent):
 
 
 class Finite_agent(Agent):
-    """An agent to play the finite version of the game
+    """
+    An agent to play the finite version of the game
 
     Args:
         Agent (Agent): The parent class 
@@ -454,12 +455,10 @@ class Dealer():
 
         Args:
             num_deck (int): the required number of decks 
-
         Raises:
             Exception: if a value below 1 is entered an exception is thrown
         """
-        #deck class
-        deck = Deck()
+        deck = Deck() #Deck class.
         #instantiate array the size of the number of cards to be recieved
         self.cards = np.array(deck.get_cards())
         
@@ -478,14 +477,15 @@ class Dealer():
             for _ in range(1,num_deck):
                 self.cards = np.concatenate((self.cards, np.array(deck.get_cards())))
         else: 
-            raise Exception('Interger above 0 needed.')
+            raise Exception('Interger above 0 required.')
         
         
         
     def hit(self, is_infinite = False) -> Card:
-        """Gives the player a random card when requested. 
-        Either deletes the card from the deck when finite cards required. 
-        Or keeps the card in the deck when is_infinite cards required.
+        """
+        Gives the agent a random card when requested. 
+        Either deletes the card from the deck for finite situation,
+        or keeps the card in the deck for the infinite.
 
         Args:
             is_infinate_cards (bool, optional): argument to decide between is_infinite and finate . Defaults to False.
