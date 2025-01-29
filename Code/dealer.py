@@ -9,30 +9,29 @@ class Agent():
     A class for the agent that plays blackjack 
     """
     
-    def __init__(self, playable_hands : int):
-        self.playable_hands = playable_hands #decreases as hands deplete (used for infinite agent)
+    def __init__(self, playable_episodes : int):
+        self.playable_episodes = playable_episodes #decreases as episodes deplete (used for infinite agent)
         self.unused_ace = 0 #flag to track if hand has an unused ace
         self.hand = [] #list of cards in current hand 
         self.score = 0 #current hand score 
-        self.cumulative_reward = 0 #cumulative reward over all hands (not currently tracked)
+        self.cumulative_reward = 0 #cumulative reward over all episodes (not currently tracked)
 
         #algorithm hyperparameters
         self.alpha = 0
         self.epislon = 0.1
         self.gamma = 1
-        self.total_iter = playable_hands
+        self.total_iter = playable_episodes
         
         self.min_alpha = 0.01
         self.max_alpha = 1.0
         self.alpha_decay_rate = 0.2 
-        self.episode = self.total_iter - self.playable_hands
         
-        self.alpha_tracking = np.zeros(playable_hands)
-        self.sumOfHand_tracking = np.zeros(playable_hands)
+        self.alpha_tracking = np.zeros(playable_episodes)
+        self.sumOfHand_tracking = np.zeros(playable_episodes)
         
     def update_tracking(self): 
-        self.alpha_tracking[self.total_iter - self.playable_hands] = self.alpha
-        self.sumOfHand_tracking[self.total_iter - self.playable_hands] = self.score
+        self.alpha_tracking[self.total_iter - self.playable_episodes] = self.alpha
+        self.sumOfHand_tracking[self.total_iter - self.playable_episodes] = self.score
 
     def save_tracking(self):
         if not os.path.exists('tracking/'):
@@ -140,8 +139,8 @@ class Infinite_agent(Agent):
         Agent (Agent): Parent class 
     """
     
-    def __init__(self, hands : int) -> None:
-        super().__init__(hands)
+    def __init__(self, episodes : int) -> None:
+        super().__init__(episodes)
         self.q_table_infinite = np.zeros([19,2,2])  #Q-table
         self.policy = None                          #Empty Policy
                
@@ -197,7 +196,7 @@ class Infinite_agent(Agent):
         
         #Recalculate alpha,
         #self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.alpha_decay_rate * self.episode )
-        self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp(-(1/(self.alpha_decay_rate*self.total_iter))*(self.total_iter - self.playable_hands))
+        self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp(-(1/(self.alpha_decay_rate*self.total_iter))*(self.total_iter - self.playable_episodes))
     
         
         #Bellman eqaution, used to calculate new Q-values in the Q-table,
@@ -276,13 +275,15 @@ class Finite_agent(Agent):
         Agent (Agent): The parent class 
     """
     
-    def __init__(self, hands):
-        super().__init__(hands)
+    def __init__(self, episodes : int):
+        super().__init__(episodes)
         self.q_table_finite = np.zeros([19,10,2,2]) # q-table 
         self.policy = None # empty policy 
         self.card_tracker = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0} # card tracking for calculating probabilities (filled during play through)
         self.loss_state = 0 # variable to track the calculate probabilty of lossing
         self.loss_state_tracker = np.zeros(10) # for debugging, will delete before hand in 
+        
+        self.epsiodes = episodes
                
     def calculate_probability_of_loss(self) -> None:
         """This calculates the probability that the next card will make the agent loose
@@ -403,11 +404,14 @@ class Finite_agent(Agent):
         old_state = self.score
         new_state = old_state+new_card_value
         
+        delta = 0
         #fixed aces bug 
         #keep state of ace to be what it was before the change 
-        #this is to allow correct switching  between the no ace and ace side of the q -table
+        #this is to allow correct switching between the no ace and ace side of the q -table
         if used_an_ace: 
             old_state+=10
+            delta = old_state**2 - self.score**2
+            #print(old_state, self.score)
             
         old_state_value = self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] 
         
@@ -426,10 +430,10 @@ class Finite_agent(Agent):
                     max_future_value = np.amax(self.q_table_finite[new_state-2][self.loss_state][self.unused_ace][action])
         
         #! need to think of how to do degrading alpha for finite cards
-        #self.alpha = 0.3/(math.exp(self.playable_hands/len(self.cards)))
+        #self.alpha = 0.3/(math.exp(self.playable_episodes/len(self.cards)))
         #bellman eqaution 
         self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] = \
-            old_state_value + self.alpha*(reward + self.gamma*max_future_value - old_state_value)
+            old_state_value + self.alpha*((reward + self.gamma*max_future_value - old_state_value) - delta)
             
         self.loss_state_tracker[self.loss_state] += 1
         print(f'q-table updated at state {old_state-2},{self.loss_state},{self.unused_ace},{action}')
@@ -456,7 +460,7 @@ class Dealer():
     The dealer essentially runs the game.
     """
     
-    def __init__(self, hands : int, is_infinite = False, training = False) -> None:
+    def __init__(self, episodes : int, num_deck : int, is_infinite = False, training = False) -> None:
         
         self.cards = None # total cards remaing 
         self.is_infinite = is_infinite #varible for infinite or finite game
@@ -464,12 +468,13 @@ class Dealer():
         
         #instantiate agent based on is_infinite 
         if self.is_infinite:
-            self.player = Infinite_agent(hands)
+            self.player = Infinite_agent(episodes)
         else: 
-            self.player = Finite_agent(0)
+            self.player = Finite_agent(episodes)
+            
+        self.num_decks = num_deck
+        self.get_decks(self.num_decks)
         
-        
-          
     def get_decks(self, num_deck : int) -> None: 
         """Collects the allotted number of decks 
 
@@ -494,11 +499,16 @@ class Dealer():
         if num_deck == 1: 
             return
         elif num_deck > 1:
+            print('finished 1')
+        
             for _ in range(1,num_deck):
                 self.cards = np.concatenate((self.cards, np.array(deck.get_cards())))
+            print('finished 2')
+        
         else: 
             raise Exception('Interger above 0 required.')
         
+        print('finished')
         
         
     def hit(self, is_infinite = False) -> Card:
@@ -541,11 +551,21 @@ class Dealer():
         """
         if is_infinite: 
             if decrement_hand:
-                self.player.playable_hands -= 1 
+                self.player.playable_episodes -= 1 
             
-            stop_condition = self.player.playable_hands
+            stop_condition = self.player.playable_episodes
         else: 
-            stop_condition = len(self.cards)
+            cards_left = len(self.cards)
+            if cards_left == 0:
+                if self.training:
+                    if self.player.training_epochs != 0:
+                        self.player.training_epochs -= 1
+                        self.get_decks(self.num_decks)
+                        stop_condition = len(self.cards)
+                        return stop_condition
+                    
+            stop_condition = cards_left
+            
             
         return stop_condition
         
@@ -553,7 +573,7 @@ class Dealer():
     def play_game(self) -> None:
         
         """Loops through the game until the number of cards runs out or the select
-        number of hands are finiished.
+        number of episodes are finiished.
         """
         #find which sstop condition to use 
         stop_condition = self.evaulate_stop_condition(is_infinite=self.is_infinite)
@@ -608,9 +628,9 @@ class Dealer():
                     print(f'player sticks with score {self.player.score} and reward {self.player.cumulative_reward}')
                     break
             
-            self.player.update_tracking() 
+            #self.player.update_tracking() 
             #print stats at the end of the hand
-            print(f'score {self.player.score}, hands {self.player.playable_hands}, cards {len(self.cards)}')
+            print(f'score {self.player.score}, episodes {self.player.playable_episodes}, cards {len(self.cards)}')
             #reset the hand
             self.player.reset_hand()
             #re-evaulate the stop condition to check if the game progresses 
@@ -622,16 +642,15 @@ class Dealer():
             self.player.save_tables()      
             
         #printing stats (not needed by helpful for debugging)
-        print(f'Game ends with {self.player.score} score, and {self.player.cumulative_reward} reward,\n Hands: {self.player.playable_hands}, card count: {len(self.cards)}')
+        print(f'Game ends with {self.player.score} score, and {self.player.cumulative_reward} reward,\n episodes: {self.player.playable_episodes}, card count: {len(self.cards)}')
         if self.is_infinite == False: 
             for x,i in enumerate(self.player.loss_state_tracker):
                 print(f'{x} - {i}')
 
 
-        self.player.save_tracking()
+        #self.player.save_tracking()
         
         
             
-dealer = Dealer(hands = 50000, is_infinite=True, training=True)
-dealer.get_decks(1000)
+dealer = Dealer(episodes = 1000, num_deck=2, is_infinite=False, training=True)
 dealer.play_game()
