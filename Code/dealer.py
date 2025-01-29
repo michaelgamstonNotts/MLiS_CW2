@@ -188,7 +188,7 @@ class Infinite_agent(Agent):
         
         #Bellman eqaution, used to calculate new Q-values in the Q-table,
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
-                    old_state_value + self.alpha*((reward + self.gamma*max_future_value - old_state_value)- delta) 
+                    old_state_value + self.alpha*((reward + self.gamma*max_future_value - old_state_value) - delta) 
         print('Updated Q-table')
         
     def assess(self, training = False) -> str:
