@@ -2,6 +2,7 @@ from card import Deck, Card
 import numpy as np
 import math
 import copy
+import os
 
 class Agent():
     """
@@ -34,6 +35,9 @@ class Agent():
         self.sumOfHand_tracking[self.total_iter - self.playable_hands] = self.score
 
     def save_tracking(self):
+        if not os.path.exists('tracking/'):
+            os.makedirs('tracking/')
+        
         np.save("tracking/alpha_tracking_data.npy",self.alpha_tracking)
         np.save("tracking/hand_sum_tracking_data.npy",self.sumOfHand_tracking)
     
