@@ -1,12 +1,12 @@
 \section{Methodology}
 
 In training an agent to play Blackjack, an iterative Q-Learning approach was taken. Watkins' Q-Learning aims to learn the optimal 'q-value' for given state-action pairs in an environment, i.e., the respective value of making a certain move in a certain environmental state. This approach was chosen because it is a model-free, value-based, off-policy algorithm. Model free means that , value based means that  , and off-policy means that   .
-WHAT DOES THIS MEAN!
+WHAT DOES THIS MEAN!  
 
 Q-learning relies on Markov Decision Processes, which enable the probabilistic nature of Blackjack to be realized by the model. MORE Q-LEARNING + MDP
 
 The Bellman's equation for Q-Learning is defined as
-\begin{multline}
+\begin{multline} \label{eq:Bellman}
     Q_{new}(s,a)=Q_{old}(s,a)+\\\alpha(\underbrace{R(s,a)+\gamma MaxQ(s',a')-Q_{old}(s,a)}_{\mathclap{\text{Temporal Difference}}})
 \end{multline}
 Where \( s, a \) are the current state and action,  \( s', a' \) are the next state and action, \( \alpha \) is the learning rate, \( \gamma \) is the discount factor, \( R(s,a) \) is the reward received after taking action \( a \) in state \( s \), and \( Q(s,a) \) is the q-value for the state-action pair. The highlighted temporal difference is used to update an estimate based on other estimates, without waiting for a final outcome (known as bootstrapping) \cite{10.5555/3312046}. The learning rate \(\alpha\), due to the probabilistic nature of the game, decayed throughout training. It took the equation, 
@@ -17,10 +17,11 @@ For respective values for the minimum and maximum learning rate, decay rate \(d\
 \begin{equation} \label{reward}
     R(s,a) = S_{new}^2 - (S_{old}^2 - S_{new}^2)\delta_{Ace}
 \end{equation}
-Where \(\delta_{Ace}=1\) when an ace drops in value from 11 to 1, and \(\delta_{Ace}=0\) otherwise, accounting for the disadvantge 
+Where \(\delta_{Ace}=1\) when an ace drops in value from 11 to 1, and \(\delta_{Ace}=0\) otherwise, accounting for the disadvantage.
 
 \smallskip
-Q-tables, used in Q-learning, encapsulate the state-action pairs, entirely defining all possible moves in the system with their respective Q-value. Each action taken recalculates respective state-action Q-values. 
+Q-tables encapsulate the state-action pairs, entirely defining all possible moves in the system with their respective Q-value. Each action taken recalculates respective state-action Q-values using equation \ref{eq:Bellman}. This converges towards a terminal value which, for probabilistic situations like this, is the expected
+From this, the optimal policy - set of moves - 
 
 \smallskip
 The optimal policy - set of moves - was obtained using 
@@ -28,7 +29,7 @@ The optimal policy - set of moves - was obtained using
     q_*(s,a) = \max_{\pi}q_{\pi}(s,a)
 \end{equation}
 
-To ensure that the 
+Since an agent follows the optimal policy where possible, exploting  and not exploring new information, an Epsilon-greedy algorithm was employed. This involves    \(X\%\)
 
 \subsection{Infinite}
 
