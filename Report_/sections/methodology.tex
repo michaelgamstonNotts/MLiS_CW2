@@ -2,14 +2,14 @@
 
 In training an agent to play Blackjack, an iterative Q-Learning approach was taken. Watkins' Q-Learning aims to learn the optimal 'q-value' for given state-action pairs in an environment, i.e., the respective value of making a certain move in a certain environmental state. This approach was chosen because it is a model-free, value-based, off-policy algorithm. Model free means that , value based means that  , and off-policy means that   .
 WHAT DOES THIS MEAN!  
-
 Q-learning relies on Markov Decision Processes, which enable the probabilistic nature of Blackjack to be realized by the model. MORE Q-LEARNING + MDP
 
 The Bellman's equation for Q-Learning is defined as
 \begin{multline} \label{eq:Bellman}
     Q_{new}(s,a)=Q_{old}(s,a)+\\\alpha(\underbrace{R(s,a)+\gamma MaxQ(s',a')-Q_{old}(s,a)}_{\mathclap{\text{Temporal Difference}}})
 \end{multline}
-Where \( s, a \) are the current state and action,  \( s', a' \) are the next state and action, \( \alpha \) is the learning rate, \( \gamma \) is the discount factor, \( R(s,a) \) is the reward received after taking action \( a \) in state \( s \), and \( Q(s,a) \) is the q-value for the state-action pair. The highlighted temporal difference is used to update an estimate based on other estimates, without waiting for a final outcome (known as bootstrapping) \cite{10.5555/3312046}. The learning rate \(\alpha\), due to the probabilistic nature of the game, decayed throughout training. It took the equation, 
+Where \( s, a \) are the current state and action,  \( s', a' \) are the next state and action, \( \alpha \) is the learning rate, \( \gamma \) is the discount factor, \( R(s,a) \) is the reward received after taking action \( a \) in state \( s \), and \( Q(s,a) \) is the q-value for the state-action pair. The highlighted temporal difference is 
+used to update an estimate based on other estimates, without waiting for a final outcome (known as bootstrapping) \cite{10.5555/3312046}. The learning rate \(\alpha\), due to the probabilistic nature of the game, decayed throughout training. It took the equation, 
 \begin{equation}
     \alpha = \alpha_{min} + (\alpha_{max} - \alpha_{min})e^{-\frac{1}{dt}}
 \end{equation}
@@ -20,20 +20,19 @@ For respective values for the minimum and maximum learning rate, decay rate \(d\
 Where \(\delta_{Ace}=1\) when an ace drops in value from 11 to 1, and \(\delta_{Ace}=0\) otherwise, accounting for the disadvantage.
 
 \smallskip
-Q-tables encapsulate the state-action pairs, entirely defining all possible moves in the system with their respective Q-value. Each action taken recalculates respective state-action Q-values using equation \ref{eq:Bellman}. This converges towards a terminal value which, for probabilistic situations like this, is the expected
-From this, the optimal policy - set of moves - 
+Q-tables encapsulate the state-action pairs, entirely defining all possible moves in the system with their respective Q-value. Each action taken recalculates respective state-action Q-values using equation \ref{eq:Bellman}. This converges towards a terminal value which, for probabilistic situations like this, is the expected ... see notes
 
-\smallskip
-The optimal policy - set of moves - was obtained using 
+From this, the optimal policy - set of moves - was determined using
 \begin{equation}
-    q_*(s,a) = \max_{\pi}q_{\pi}(s,a)
+    q_*(s,a) = \max_{\pi}q_{\pi}(s,a)\text{.}
 \end{equation}
 
-Since an agent follows the optimal policy where possible, exploting  and not exploring new information, an Epsilon-greedy algorithm was employed. This involves    \(X\%\)
+\smallskip
+Since an agent follows the optimal policy where possible, exploiting  and not exploring new information, an Epsilon-greedy algorithm was employed. This intends to explore less taken state-action avenues \(X\%\) of the time. 
 
 \subsection{Infinite}
 
-In the "infinite" situation, the probability of each card being drawn is equal, so retaining prior knowledge of cards drawn poses no advantage. Therefore, the Q-table consisted of the dimensions, 'score' - 2:20, 'held ace valued at 11' - Yes or No, and 'action' - Hit or Stick.
+In the "infinite" situation, the probability of each card being drawn is equal, so retaining prior knowledge of cards drawn poses no advantage. Therefore, the Q-table consisted of the dimensions; 'score' (2$\rightarrow $ 20), 'ace valued at 11 in hand' (Yes or No), and 'action' (Hit or Stick).
 
 
 \subsection{Finite}
