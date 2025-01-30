@@ -649,8 +649,6 @@ class Dealer():
 
 
         #self.player.save_tracking()
-        
-        
-            
-dealer = Dealer(episodes = 50000, num_deck=2, is_infinite=False, training=True)
+                    
+dealer = Dealer(episodes = 10000, num_deck=2, is_infinite=False, training=True)
 dealer.play_game()
