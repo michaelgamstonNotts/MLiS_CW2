@@ -17,7 +17,7 @@ class Agent():
         self.cumulative_reward = 0 #cumulative reward over all episodes (not currently tracked)
 
         #algorithm hyperparameters
-        self.alpha = 0
+        self.alpha = 0.1
         self.epislon = 0.1
         self.gamma = 1
         self.total_iter = playable_episodes
@@ -238,7 +238,7 @@ class Infinite_agent(Agent):
                 action = np.random.randint(0,2) #pick random move.
             else: #Otherwise, run Epsilon-greedy algorithm to pick the next move.
                 if self.epislon > np.random.random():
-                    action = np.argmin(self.q_table_infinite[self.score-2][self.unused_ace])
+                    action = np.random.randint(0,2)
                 else:
                     action = np.argmax(self.q_table_infinite[self.score-2][self.unused_ace])
             return action_int_to_str[action]
@@ -283,7 +283,7 @@ class Finite_agent(Agent):
         self.loss_state = 0 # variable to track the calculate probabilty of lossing
         self.loss_state_tracker = np.zeros(10) # for debugging, will delete before hand in 
         
-        self.epsiodes = episodes
+        self.episodes = episodes
                
     def calculate_probability_of_loss(self) -> None:
         """This calculates the probability that the next card will make the agent loose
@@ -369,7 +369,7 @@ class Finite_agent(Agent):
             else:
                 #else run epsilon greedy to find action 
                 if self.epislon > np.random.random():
-                    action = np.argmin(self.q_table_finite[self.score-2][self.loss_state][self.unused_ace])
+                    action = np.random.randint(0,2)
                 else:
                     action = np.argmax(self.q_table_finite[self.score-2][self.loss_state][self.unused_ace])
             
@@ -419,22 +419,30 @@ class Finite_agent(Agent):
             reward = 0
             max_future_value = 0
         
-        else:
-            reward = new_state**2 if action else self.score**2 
-            if win_case or (action == 0): 
+        elif new_state <= 21: #If the new score is within the score limit,
+            reward = new_state**2 if action == 1 else self.score**2 #calculate score based on move.
+            if win_case or action == 0: #If the game is won, or the agent has stuck,
                 max_future_value = 0
-            elif action == 1:
+            elif action == 1: #If the agent hits and does not win,
                 if used_an_ace:
+                    #If an ace has been used this move, then get the max future value from the No Ace side of the Q-table.
                     max_future_value = np.amax(self.q_table_finite[new_state-2][self.loss_state][0][action])
-                else:
+                else: 
+                    #Otherwise, get the max future value from the same side of the Q-table.
                     max_future_value = np.amax(self.q_table_finite[new_state-2][self.loss_state][self.unused_ace][action])
         
-        #! need to think of how to do degrading alpha for finite cards
-        #self.alpha = 0.3/(math.exp(self.playable_episodes/len(self.cards)))
+        #Recalculate alpha,
+        #self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.alpha_decay_rate * self.episode )
+        self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp(-(1/(self.alpha_decay_rate*self.total_iter))*(self.total_iter - self.playable_episodes))
+        
         #bellman eqaution 
         self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] = \
             old_state_value + self.alpha*((reward + self.gamma*max_future_value - old_state_value) - delta)
-            
+        
+        print(f'old state value - {old_state_value}, alpha - {self.alpha}, reward - {reward}, gamma {self.gamma}, max future value {max_future_value}, delta {delta}')
+        print(self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action])
+        print(old_state-2,self.loss_state,self.unused_ace,action)
+           
         self.loss_state_tracker[self.loss_state] += 1
         print(f'q-table updated at state {old_state-2},{self.loss_state},{self.unused_ace},{action}')
         
@@ -502,6 +510,7 @@ class Dealer():
             print('finished 1')
         
             for _ in range(1,num_deck):
+                #!change this, concatenate is very slow 
                 self.cards = np.concatenate((self.cards, np.array(deck.get_cards())))
             print('finished 2')
         
@@ -558,8 +567,9 @@ class Dealer():
             cards_left = len(self.cards)
             if cards_left == 0:
                 if self.training:
-                    if self.player.epsiodes != 0:
-                        self.player.epsiodes -= 1
+                    if self.player.episodes != 0:
+                        self.player.episodes -= 1
+                        print('hello please ---------------------------------------------------------------- ')
                         self.get_decks(self.num_decks)
                         stop_condition = len(self.cards)
                         return stop_condition
@@ -630,7 +640,7 @@ class Dealer():
             
             #self.player.update_tracking() 
             #print stats at the end of the hand
-            print(f'score {self.player.score}, episodes {self.player.playable_episodes}, cards {len(self.cards)}')
+            print(f'score {self.player.score}, episodes {self.player.episodes}, cards {len(self.cards)}')
             #reset the hand
             self.player.reset_hand()
             #re-evaulate the stop condition to check if the game progresses 
@@ -642,7 +652,7 @@ class Dealer():
             self.player.save_tables()      
             
         #printing stats (not needed by helpful for debugging)
-        print(f'Game ends with {self.player.score} score, and {self.player.cumulative_reward} reward,\n episodes: {self.player.playable_episodes}, card count: {len(self.cards)}')
+        print(f'Game ends with {self.player.score} score, and {self.player.cumulative_reward} reward,\n episodes: {self.player.episodes}, card count: {len(self.cards)}')
         if self.is_infinite == False: 
             for x,i in enumerate(self.player.loss_state_tracker):
                 print(f'{x} - {i}')
@@ -650,5 +660,5 @@ class Dealer():
 
         #self.player.save_tracking()
                     
-dealer = Dealer(episodes = 10000, num_deck=2, is_infinite=False, training=True)
+dealer = Dealer(episodes = 10000, num_deck=1, is_infinite=False, training=True)
 dealer.play_game()
