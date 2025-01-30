@@ -3,6 +3,8 @@
 /Code/infinite_q_table.npy
 /Code/finite_policy.npy
 /Code/finite_q_table.npy
+/Code/__pycache__
+/__pycache__
 /mainNotes.bib
 /main.synctex.gz
 /main.bbl
