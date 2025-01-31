@@ -37,7 +37,7 @@ In the "infinite" situation, the probability of each card being drawn is equal, 
 
 \subsection{Finite}
 
-In the 'finite' situation, cards were drawn from a pile of finite number, meaning that the probability of drawing respective cards changed as the game progressed. This posed a new challenge which would have ideally been solved by providing the agent with all previously dealt cards, from which it could learn to predict the probabilities of newly dealt cards, and so, how risk-adverse it should play. However, doing so would be at great computational cost. To strike a balance between accuracy and potential advantage, the probability of losing was incorporated into the q-table. This was chosen over, say, card counting because it provided the agent with the most accurate representation of, 
+In the 'finite' situation, cards were drawn from a pile of finite number, meaning that the probability of drawing respective cards changed as the game progressed. This posed a new challenge which would have ideally been solved by providing the agent with all previously dealt cards, from which it could learn to predict the probabilities of newly dealt cards, and so, how risk-adverse it should play. However, doing so would be at great computational cost. To strike a balance between accuracy and potential advantage, the probability of losing was incorporated into the q-table. This was chosen over, say, card counting because it provided the agent with the most accurate representation of , while maintaining relatively low complexity
 
 To implement this continuous probability into the Q-table of finite dimension size, the probabilities were discretized, i.e., continuous probabilities were separated into bins 
 
