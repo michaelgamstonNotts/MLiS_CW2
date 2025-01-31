@@ -1,15 +1,10 @@
 \section{Methodology}
 
-In training an agent to play Blackjack, an iterative Q-Learning approach was taken. Watkins' Q-Learning aims to learn the optimal 'q-value' for given state-action pairs in an environment, i.e., the respective value of making a certain move in a certain environmental state. This approach was chosen because it is a model-free, value-based, off-policy algorithm. Model free means that , value based means that  , and off-policy means that   .
-WHAT DOES THIS MEAN!  
-Q-learning relies on Markov Decision Processes, which enable the probabilistic nature of Blackjack to be realized by the model. MORE Q-LEARNING + MDP
-
-The Bellman's equation for Q-Learning is defined as
+In training an agent to play Blackjack, an iterative Q-Learning approach was taken. Watkins' Q-Learning aims to learn the optimal 'q-value' for given state-action pairs in an environment, i.e., the respective value of making a certain move in a certain environmental state. This approach was chosen because it is a model-free, value-based, off-policy algorithm. Model free means that the agent does not build an understanding of its environment's functionality, value based means that the algorithm estimates the value of each state-action pair, and off-policy means that the optimal policy need not be followed. Q-learning solves problems modelled as MDP, meaning the probabilistic nature of Blackjack was realized by the model. The Bellman's equation for Q-Learning is
 \begin{multline} \label{eq:Bellman}
-    Q_{new}(s,a)=Q_{old}(s,a)+\\\alpha(\underbrace{R(s,a)+\gamma MaxQ(s',a')-Q_{old}(s,a)}_{\mathclap{\text{Temporal Difference}}})
+    Q_{new}(s,a)=Q_{old}(s,a)+\\\alpha(\underbrace{R(s,a)+\gamma MaxQ(s',a')-Q_{old}(s,a)}_{\mathclap{\text{Temporal Difference}}})\text{.}
 \end{multline}
-Where \( s, a \) are the current state and action,  \( s', a' \) are the next state and action, \( \alpha \) is the learning rate, \( \gamma \) is the discount factor, \( R(s,a) \) is the reward received after taking action \( a \) in state \( s \), and \( Q(s,a) \) is the q-value for the state-action pair. The highlighted temporal difference is 
-used to update an estimate based on other estimates, without waiting for a final outcome (known as bootstrapping) \cite{10.5555/3312046}. The learning rate \(\alpha\), due to the probabilistic nature of the game, decayed throughout training. It took the equation, 
+Where \( s, a \) are the current state and action,  \( s', a' \) are the next state and action, \( \alpha \) is the learning rate, \( \gamma \) is the discount factor, \( R(s,a) \) is the reward received after taking action \( a \) in state \( s \), and \( Q(s,a) \) is the q-value for the state-action pair. The highlighted temporal difference is used to update an estimate based on other estimates, without waiting for a final outcome (known as bootstrapping) \cite{10.5555/3312046}. The learning rate \(\alpha\) decayed throughout training with the aim of reducing probability induced learning oscillations. It took the equation, 
 \begin{equation} \label{eq:learning rate}
     \alpha = \alpha_{min} + (\alpha_{max} - \alpha_{min})e^{-\frac{1}{dt}}
 \end{equation}
@@ -17,48 +12,27 @@ For respective values for the minimum and maximum learning rate, decay rate \(d\
 \begin{equation} \label{reward}
     R(s,a) = S_{new}^2 - (S_{old}^2 - S_{new}^2)\delta_{Ace}
 \end{equation}
-Where \(\delta_{Ace}=1\) when an ace drops in value from 11 to 1, and \(\delta_{Ace}=0\) otherwise, accounting for the disadvantage.
+Where \(\delta_{Ace}=1\) when an ace drops in value from 11 to 1, and \(\delta_{Ace}=0\) otherwise. This is used to proportionally penalize the agent for using an ace since it is less advantageous to hold an 1-valued ace than a 11-valued ace.
 
-\smallskip
-Q-tables encapsulate the state-action pairs, entirely defining all possible moves in the system with their respective Q-value. Each action taken recalculates respective state-action Q-values using equation \ref{eq:Bellman}. This converges towards a terminal value which, for probabilistic situations like this, is the expected ... see notes
+\medskip
+Q-tables encapsulate the state-action pairs, entirely defining all possible moves in the system with their respective Q-value. Each action taken recalculates respective state-action Q-values using equation \ref{eq:Bellman}. This converges towards a terminal value which, for probabilistic situations like this, is the expected sum of future rewards. From this, the optimal policy was determined by selecting the action with the highest q-value for each state. 
 
-From this, the optimal policy - set of moves - was determined using
-\begin{equation} \label{eq:optimal policy}
-    q_*(s,a) = \max_{\pi}q_{\pi}(s,a)\text{.}
-\end{equation}
+% \begin{equation} \label{eq:optimal policy}
+%     q_*(s,a) = \max_{\pi}q_{\pi}(s,a)\text{.}
+% \end{equation}
 
-\smallskip
 Since an agent follows the optimal policy where possible, exploiting  and not exploring new information, an Epsilon-greedy algorithm was employed. This intends to explore less taken state-action avenues \(X\%\) of the time. 
 
 \subsection{Infinite}
 
-In the "infinite" situation, the probability of each card being drawn is equal, so retaining prior knowledge of cards drawn poses no advantage. Therefore, the Q-table consisted of the dimensions; 'score' (2$\rightarrow $ 20), 'ace valued at 11 in hand' (Yes or No), and 'action' (Hit or Stick).
-
+In the 'infinite' situation, the probability of each card being drawn was equal, meaning that the expected value of the next drawn card remained constant, so retaining prior knowledge of cards drawn posed no advantage to the agent. Therefore, the environment was composed of two state variables - current score and usable ace - and one action variable - hit/stick.
 
 \subsection{Finite}
 
-In the 'finite' situation, cards were drawn from a pile of finite number, meaning that the probability of drawing respective cards changed as the game progressed. This posed a new challenge which would have ideally been solved by providing the agent with all previously dealt cards, from which it could learn to predict the probabilities of newly dealt cards, and so, how risk-adverse it should play. However, doing so would be at great computational cost. To strike a balance between accuracy and potential advantage, the probability of losing was incorporated into the q-table. This was chosen over, say, card counting because it provided the agent with the most accurate representation of , while maintaining relatively low complexity
+In the 'finite' situation, cards were drawn from a pile of finite number, meaning that the probability of drawing respective cards changed as the game progressed. This introduced a challenge that would ideally have been addressed by providing the agent with all previously dealt cards, where the agent would have learned to predict the probabilities of new cards and adjust its play strategy accordingly. However, incorporating all previous cards into the agent's calculations comes at a significant computational cost. 
 
-To implement this continuous probability into the Q-table of finite dimension size, the probabilities were discretized, i.e., continuous probabilities were separated into bins 
+\medskip
+To balance accuracy with computational efficiency, the probability of losing was integrated into the Q-table (a concept from reinforcement learning where Q-values represent the expected utility of taking an action). This approach was chosen over, say, card counting because it provided a more accurate representation of the environment while maintaining relatively low complexity. Since these probabilities could have been deduced from previously dealt cards, providing the agent with this essentially skipped the step of learning probabilistic expectations. 
 
-
-% 1. **Discretization of Probabilities**: Divide the range [0, 1] into a finite number of intervals (bins). For example, using eight bins would create ranges like [0, 0.125), [0.125, 0.25), ..., up to [0.875, 1].
-
-% 2. **Mapping Continuous Values**: Convert each continuous probability into a corresponding bin index. This allows the Q-table to handle these values as discrete states.
-
-% 3. **Q-table Implementation**: Construct the Q-table with rows representing discretized state-action pairs and columns for rewards. Each entry in the table corresponds to the expected utility of taking an action 
-% given a state.
-
-% 4. **Training and Learning**: During training, each probability is mapped to its bin index when interacting with the environment, ensuring compatibility with the discrete Q-table structure.
-
-% 5. **Considerations for Refinement**: If performance is unsatisfactory, consider advanced methods like function approximation or neural networks that can handle continuous spaces more effectively.
-
-% By discretizing probabilities and mapping them to bins, this approach simplifies handling continuous state spaces while maintaining the effectiveness of the Q-table for reinforcement learning tasks.
-
-
-
-... consider other methods (like card counting)
-
-? average of recived cards???
-
-find a reference that justifies using a decreasing alpha for probabilistic problems. 
+\medskip
+To implement this continuous probability into the Q-table of finite dimension size, the probabilities were discretized, i.e., continuous probabilities were separated into bins of size 2\%. Therefore, the environment was composed of three variables - current score, usable ace, and probability of losing - and one action variable - hit/stick. 
