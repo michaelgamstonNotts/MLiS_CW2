@@ -18,13 +18,13 @@ class Agent():
 
         #algorithm hyperparameters
         self.alpha = 0.1
-        self.epislon = 0.1
+        self.epislon = 0.25
         self.gamma = 1
         self.total_iter = playable_episodes
         
-        self.min_alpha = 0.01
+        self.min_alpha = 0.001
         self.max_alpha = 1.0
-        self.alpha_decay_rate = 0.2 
+        self.alpha_decay_rate = 0.2
         
         self.alpha_tracking = np.zeros(playable_episodes)
         self.sumOfHand_tracking = np.zeros(playable_episodes)
@@ -143,6 +143,8 @@ class Infinite_agent(Agent):
         super().__init__(episodes)
         self.q_table_infinite = np.zeros([19,2,2])  #Q-table
         self.policy = None                          #Empty Policy
+        #! delete me 
+        self.tracker_q = np.zeros([19,2])
                
     def update_q_table(self, new_card : Card, action : int, win_case = False, used_an_ace = False) -> None:
         """
@@ -202,6 +204,9 @@ class Infinite_agent(Agent):
         #Bellman eqaution, used to calculate new Q-values in the Q-table,
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
                     old_state_value + self.alpha*((reward + self.gamma*max_future_value - old_state_value) - delta) 
+        
+        #! delete me 
+        self.tracker_q[old_state-2][self.unused_ace] += 1
         print('Updated Q-table')
         
     def assess(self, training = False) -> str:
@@ -264,7 +269,8 @@ class Infinite_agent(Agent):
                 self.policy[s_index][u_index] = np.argmax(unused_ace)
                 
         np.save('infinite_policy.npy', self.policy)
-
+        #! delete me 
+        np.save('trackerson_the_2nd.npy', self.tracker_q)
 
 
 class Finite_agent(Agent):
@@ -278,6 +284,8 @@ class Finite_agent(Agent):
     def __init__(self, episodes : int):
         super().__init__(episodes)
         self.q_table_finite = np.zeros([19,10,2,2]) # q-table 
+        #! delete me
+        self.state_updated_tracker = np.zeros([19,10,2])
         self.policy = None # empty policy 
         self.card_tracker = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0} # card tracking for calculating probabilities (filled during play through)
         self.loss_state = 0 # variable to track the calculate probabilty of lossing
@@ -300,13 +308,10 @@ class Finite_agent(Agent):
             numerator = sum(list(self.card_tracker.values())[loss_value:])
         else: 
             numerator = 0
-        print(self.card_tracker.values())
-        print(f'score {self.score} - loss value {loss_value} - numerator {numerator} - denom {total_number_cards}')
         
         percentile = int(round((numerator / total_number_cards), 2)*100)
         if percentile >= 90: 
             self.loss_state = 9 
-            print('yes 90')
         elif percentile >= 80: 
             self.loss_state = 8 
         elif percentile >= 70:
@@ -326,7 +331,7 @@ class Finite_agent(Agent):
         elif percentile >= 0:
             self.loss_state = 0  
              
-        
+        #! for old loss state 
         #self.loss_state = int(round((numerator / total_number_cards), 2)*100)
         print(f'- loss_state {self.loss_state}')
         
@@ -352,15 +357,12 @@ class Finite_agent(Agent):
         
         if training: 
             #get q value for hit and stick
-            #! remove the try statement before hand in 
-            try:
-                stick_q = self.q_table_finite[self.score-2][self.loss_state][self.unused_ace][0]
-                hit_q = self.q_table_finite[self.score-2][self.loss_state][self.unused_ace][1]
-            except IndexError as e: 
-                print(e)
-                print(f'score: {self.score} aces {self.unused_ace}')
-                print(*self.hand)
-                raise e
+            
+            
+
+            stick_q = self.q_table_finite[self.score-2][self.loss_state][self.unused_ace][0]
+            hit_q = self.q_table_finite[self.score-2][self.loss_state][self.unused_ace][1]
+
             
             #check if they are equal
             if stick_q == hit_q:
@@ -433,18 +435,17 @@ class Finite_agent(Agent):
         
         #Recalculate alpha,
         #self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.alpha_decay_rate * self.episode )
-        self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp(-(1/(self.alpha_decay_rate*self.total_iter))*(self.total_iter - self.playable_episodes))
+        self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp(-(1/(self.alpha_decay_rate*self.total_iter))*(self.total_iter - self.episodes))
         
         #bellman eqaution 
         self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] = \
             old_state_value + self.alpha*((reward + self.gamma*max_future_value - old_state_value) - delta)
         
-        print(f'old state value - {old_state_value}, alpha - {self.alpha}, reward - {reward}, gamma {self.gamma}, max future value {max_future_value}, delta {delta}')
-        print(self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action])
-        print(old_state-2,self.loss_state,self.unused_ace,action)
+        #! delete me 
+        self.state_updated_tracker[old_state-2][self.loss_state][self.unused_ace] += 1
            
         self.loss_state_tracker[self.loss_state] += 1
-        print(f'q-table updated at state {old_state-2},{self.loss_state},{self.unused_ace},{action}')
+        
         
     def save_tables(self):
         """
@@ -457,7 +458,9 @@ class Finite_agent(Agent):
             for p_index, percentage in enumerate(state): 
                 for u_index, unused_ace in enumerate(percentage):
                     self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
-                
+                    
+        #! delete me
+        np.save('trackery_mcTrackerson.npy', self.state_updated_tracker)
         np.save('finite_policy.npy', self.policy)
 
 
@@ -500,20 +503,15 @@ class Dealer():
             for card_type in list(self.player.card_tracker.keys())[:-1]: 
                 self.player.card_tracker[card_type] = 4*num_deck
             self.player.card_tracker[10] = 16*num_deck
-            print('card tracker')
-            print(self.player.card_tracker)
         
         #load in cards 
         if num_deck == 1: 
             return
         elif num_deck > 1:
-            print('finished 1')
         
             for _ in range(1,num_deck):
                 #!change this, concatenate is very slow 
                 self.cards = np.concatenate((self.cards, np.array(deck.get_cards())))
-            print('finished 2')
-        
         else: 
             raise Exception('Interger above 0 required.')
         
@@ -536,7 +534,10 @@ class Dealer():
         #randomly select a card 
         card_index = np.random.randint(0, len(self.cards))
         #copy the card (no directly referenced to avoid conflict in inifinite version)
-        card = copy.copy(self.cards[card_index])
+        if is_infinite == True: 
+            card = copy.copy(self.cards[card_index])
+        else: 
+            card = self.cards[card_index]
         
         #if finite then delete card from cards otherwise keep it
         if is_infinite == False: 
@@ -569,13 +570,11 @@ class Dealer():
                 if self.training:
                     if self.player.episodes != 0:
                         self.player.episodes -= 1
-                        print('hello please ---------------------------------------------------------------- ')
                         self.get_decks(self.num_decks)
                         stop_condition = len(self.cards)
                         return stop_condition
                     
             stop_condition = cards_left
-            
             
         return stop_condition
         
@@ -597,10 +596,10 @@ class Dealer():
             self.player.hand.append(first_card)
             self.player.check_for_unused_ace()
 
-            print('\nfirst hand given ----------------------------------------------')
+            #print('\nfirst hand given ----------------------------------------------')
             while True: 
-                print(f'round begins with: score {self.player.score}, aces {self.player.unused_ace}')
-                print(*self.player.hand)
+                #print(f'round begins with: score {self.player.score}, aces {self.player.unused_ace}')
+                #print(*self.player.hand)
                 
                 #check if there are cards to play still
                 if len(self.cards) < 1:
@@ -613,12 +612,12 @@ class Dealer():
                 #check if player looses 
                 if self.player.score > 21: 
                     if self.player.unused_ace == 0:
-                        print('player loses')
+                        #print('player loses')
                         break 
                     else:
                         #! need to update q-value
                         self.player.change_ace_value()
-                        print('got to over 21, changed ace value')
+                        #print('got to over 21, changed ace value')
                 
                 #ask player if they want to hit or stick
                 response = self.player.assess(training=self.training)
@@ -628,14 +627,14 @@ class Dealer():
                     #if hit then ask for a new card and pass it to the player 
                     #if training then hit() will update the q-table
                     self.player.hit(self.hit(is_infinite=self.is_infinite), training=self.training)
-                    print('player hits')
+                    #print('player hits')
                 elif response == 'stick':
                     #if stick then stop the game 
                     if self.training:
                         #update q-table if training required 
-                        print('update from stick')
+                        #print('update from stick')
                         self.player.update_q_table(new_card = None, action = 0)
-                    print(f'player sticks with score {self.player.score} and reward {self.player.cumulative_reward}')
+                    #print(f'player sticks with score {self.player.score} and reward {self.player.cumulative_reward}')
                     break
             
             #self.player.update_tracking() 
@@ -652,7 +651,7 @@ class Dealer():
             self.player.save_tables()      
             
         #printing stats (not needed by helpful for debugging)
-        print(f'Game ends with {self.player.score} score, and {self.player.cumulative_reward} reward,\n episodes: {self.player.episodes}, card count: {len(self.cards)}')
+        print(f'Game ends with {self.player.score}') #score, and {self.player.cumulative_reward} reward,\n episodes: {self.player.episodes}, card count: {len(self.cards)}')
         if self.is_infinite == False: 
             for x,i in enumerate(self.player.loss_state_tracker):
                 print(f'{x} - {i}')
@@ -660,5 +659,5 @@ class Dealer():
 
         #self.player.save_tracking()
                     
-dealer = Dealer(episodes = 10000, num_deck=1, is_infinite=False, training=True)
+dealer = Dealer(episodes = 100000, num_deck=2, is_infinite=False, training=True)
 dealer.play_game()
