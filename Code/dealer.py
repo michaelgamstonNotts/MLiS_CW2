@@ -3,6 +3,7 @@ import numpy as np
 import math
 import copy
 import os
+import pandas as pd
 
 class Agent():
     """
@@ -24,21 +25,31 @@ class Agent():
         
         self.min_alpha = 0.001
         self.max_alpha = 1.0
-        self.alpha_decay_rate = 0.01
+        self.alpha_decay_rate = 0.08
         
-        self.alpha_tracking = np.zeros(playable_episodes)
-        self.sumOfHand_tracking = np.zeros(playable_episodes)
+        self.alpha_tracking = []
+        self.sumOfHand_tracking = []
         
-    def update_tracking(self): 
-        self.alpha_tracking[self.total_iter - self.playable_episodes] = self.alpha
-        self.sumOfHand_tracking[self.total_iter - self.playable_episodes] = self.score
+    def update_tracking(self, is_infinite=True): 
+        if is_infinite == True:
+            self.alpha_tracking.append(self.alpha)
+            self.sumOfHand_tracking.append(self.score)
+        else:
+            self.alpha_tracking.append(self.alpha)
+            self.sumOfHand_tracking.append(self.score)
+            print('alpha:', self.alpha, 'self.score',self.score, '...', (self.total_iter - self.episodes -1))
 
-    def save_tracking(self):
+    def save_tracking(self, is_infinite=True):
         if not os.path.exists('tracking/'):
             os.makedirs('tracking/')
+       
         
-        np.save("tracking/alpha_tracking_data.npy",self.alpha_tracking)
-        np.save("tracking/hand_sum_tracking_data.npy",self.sumOfHand_tracking)
+        if is_infinite == True:
+            np.save("tracking/alpha_track_infinite.npy",self.alpha_tracking)
+            np.save("tracking/hand_sum_track_infinite.npy",self.sumOfHand_tracking)
+        else:
+            np.save("tracking/alpha_track_finite.npy",self.alpha_tracking)
+            np.save("tracking/hand_sum_track_finite.npy",self.sumOfHand_tracking)
     
     #to be overwritten by child classes 
     def update_q_table(self):
@@ -437,14 +448,12 @@ class Finite_agent(Agent):
         #Recalculate alpha,
         #self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.alpha_decay_rate * self.episode )
         self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp(-(1/(self.alpha_decay_rate*self.total_iter))*(self.total_iter - self.episodes))
-        
         #bellman eqaution 
         self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] = \
             old_state_value + self.alpha*((reward + self.gamma*max_future_value - old_state_value) - delta)
         
         #! delete me 
         self.state_updated_tracker[old_state-2][self.loss_state][self.unused_ace] += 1
-           
         self.loss_state_tracker[self.loss_state] += 1
         
         
@@ -459,14 +468,13 @@ class Finite_agent(Agent):
             for p_index, percentage in enumerate(state): 
                 for u_index, unused_ace in enumerate(percentage):
                     if self.toggle_selective_policy: 
-
+                        
                         if (self.state_updated_tracker[s_index][p_index][u_index] > 99): 
                             self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
                         else:
-                            self.policy[s_index][p_index][u_index] = 0
+                            self.policy[s_index][p_index][u_index] = 2 
                             
                     else:
-                        
                         self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
         #! delete me
         np.save('trackery_mcTrackerson.npy', self.state_updated_tracker)
@@ -647,7 +655,7 @@ class Dealer():
                     #print(f'player sticks with score {self.player.score} and reward {self.player.cumulative_reward}')
                     break
             
-            #self.player.update_tracking() 
+            self.player.update_tracking(is_infinite=self.is_infinite) 
             #print stats at the end of the hand
             print(f'score {self.player.score}, episodes {self.player.episodes if not self.is_infinite else self.player.playable_episodes}, cards {len(self.cards)}')
             #reset the hand
@@ -667,8 +675,7 @@ class Dealer():
             for x,i in enumerate(self.player.loss_state_tracker):
                 print(f'{x} - {i}')
 
-
-        #self.player.save_tracking()
+        self.player.save_tracking(is_infinite=self.is_infinite)
                     
-dealer = Dealer(episodes = 10, num_deck=2, is_infinite=False, training=True, toggle_selective_policy = True)
+dealer = Dealer(episodes = 300000, num_deck=1, is_infinite=False, training=True, toggle_selective_policy = True)
 dealer.play_game()
