@@ -24,7 +24,7 @@ class Agent():
         
         self.min_alpha = 0.001
         self.max_alpha = 1.0
-        self.alpha_decay_rate = 0.2
+        self.alpha_decay_rate = 0.01
         
         self.alpha_tracking = np.zeros(playable_episodes)
         self.sumOfHand_tracking = np.zeros(playable_episodes)
@@ -471,19 +471,25 @@ class Dealer():
     The dealer essentially runs the game.
     """
     
-    def __init__(self, episodes : int, num_deck : int, is_infinite = False, training = False) -> None:
+    def __init__(self, episodes : int, num_deck = 1, is_infinite = False, training = False) -> None:
         
         self.cards = None # total cards remaing 
         self.is_infinite = is_infinite #varible for infinite or finite game
         self.training = training # if training or not
+        self.initail_episode_count = episodes
         
         #instantiate agent based on is_infinite 
         if self.is_infinite:
             self.player = Infinite_agent(episodes)
         else: 
             self.player = Finite_agent(episodes)
-            
-        self.num_decks = num_deck
+        
+        self.deck_types_left_to_train = []
+        
+        if type(num_deck) == list: 
+            self.deck_types_left_to_train = num_deck
+            self.num_decks = self.deck_types_left_to_train.pop(0)
+        
         self.get_decks(self.num_decks)
         
     def get_decks(self, num_deck : int) -> None: 
@@ -573,6 +579,18 @@ class Dealer():
                         self.get_decks(self.num_decks)
                         stop_condition = len(self.cards)
                         return stop_condition
+            
+                    elif self.player.episodes == 0:
+                        if len(self.deck_types_left_to_train) > 0: 
+                    
+                            print(f'completed first deck type of {self.num_decks} ------------------------------------------------------')
+                            self.player.episodes = self.initail_episode_count
+                            self.num_decks = self.deck_types_left_to_train.pop(0)
+                            self.get_decks(self.num_decks)
+                            stop_condition = len(self.cards)
+                
+                            return stop_condition
+            
             stop_condition = cards_left
 
         return stop_condition
@@ -587,14 +605,14 @@ class Dealer():
         stop_condition = self.evaulate_stop_condition(is_infinite=self.is_infinite)
 
         while(0 < stop_condition):
-            
+            print(f'round starts with {len(self.cards)}')
             # give player a card
             first_card = self.hit(is_infinite=self.is_infinite)
             #manually add card info to agent 
             self.player.score = first_card.value 
             self.player.hand.append(first_card)
             self.player.check_for_unused_ace()
-
+            
             #print('\nfirst hand given ----------------------------------------------')
             while True: 
                 #print(f'round begins with: score {self.player.score}, aces {self.player.unused_ace}')
@@ -659,5 +677,5 @@ class Dealer():
 
         #self.player.save_tracking()
                     
-dealer = Dealer(episodes = 2, num_deck=2, is_infinite=False, training=True)
+dealer = Dealer(episodes = 1, num_deck=[1,1,1], is_infinite=False, training=True)
 dealer.play_game()
