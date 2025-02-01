@@ -20,7 +20,7 @@ class Agent():
         self.alpha = 0.1
         self.epislon = 0.25
         self.gamma = 1
-        self.total_iter = playable_episodes
+        self.total_iter = playable_episodes #
         
         self.min_alpha = 0.001
         self.max_alpha = 1.0
@@ -266,7 +266,7 @@ class Infinite_agent(Agent):
 
         for s_index, state in enumerate(self.q_table_infinite): 
             for u_index, unused_ace in enumerate(state):
-                self.policy[s_index][u_index] = np.argmax(unused_ace)
+                self.policy[s_index][u_index] = int(np.argmax(unused_ace))
                 
         np.save('infinite_policy.npy', self.policy)
         #! delete me 
@@ -515,7 +515,7 @@ class Dealer():
         else: 
             raise Exception('Interger above 0 required.')
         
-        print('finished')
+        print('New decks set')
         
         
     def hit(self, is_infinite = False) -> Card:
@@ -562,20 +562,19 @@ class Dealer():
         if is_infinite: 
             if decrement_hand:
                 self.player.playable_episodes -= 1 
-            
             stop_condition = self.player.playable_episodes
-        else: 
+        
+        else: #is finite
             cards_left = len(self.cards)
             if cards_left == 0:
                 if self.training:
-                    if self.player.episodes != 0:
-                        self.player.episodes -= 1
+                    if self.player.playable_episodes != 0:
+                        self.player.playable_episodes -= 1
                         self.get_decks(self.num_decks)
                         stop_condition = len(self.cards)
                         return stop_condition
-                    
             stop_condition = cards_left
-            
+
         return stop_condition
         
         
@@ -639,9 +638,10 @@ class Dealer():
             
             #self.player.update_tracking() 
             #print stats at the end of the hand
-            print(f'score {self.player.score}, episodes {self.player.episodes}, cards {len(self.cards)}')
+            print(f'score {self.player.score}, episodes {self.player.playable_episodes}, cards {len(self.cards)}')
             #reset the hand
             self.player.reset_hand()
+            print('-------')
             #re-evaulate the stop condition to check if the game progresses 
             stop_condition = self.evaulate_stop_condition(is_infinite=self.is_infinite, decrement_hand=self.is_infinite)
         
@@ -659,5 +659,5 @@ class Dealer():
 
         #self.player.save_tracking()
                     
-dealer = Dealer(episodes = 100000, num_deck=2, is_infinite=False, training=True)
+dealer = Dealer(episodes = 100000, num_deck=2, is_infinite=True, training=True)
 dealer.play_game()
