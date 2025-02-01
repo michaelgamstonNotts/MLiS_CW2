@@ -568,8 +568,8 @@ class Dealer():
             cards_left = len(self.cards)
             if cards_left == 0:
                 if self.training:
-                    if self.player.playable_episodes != 0:
-                        self.player.playable_episodes -= 1
+                    if self.player.episodes != 0:
+                        self.player.episodes -= 1
                         self.get_decks(self.num_decks)
                         stop_condition = len(self.cards)
                         return stop_condition
@@ -638,7 +638,7 @@ class Dealer():
             
             #self.player.update_tracking() 
             #print stats at the end of the hand
-            print(f'score {self.player.score}, episodes {self.player.playable_episodes}, cards {len(self.cards)}')
+            print(f'score {self.player.score}, episodes {self.player.episodes if not self.is_infinite else self.player.playable_episodes}, cards {len(self.cards)}')
             #reset the hand
             self.player.reset_hand()
             print('-------')
@@ -651,7 +651,7 @@ class Dealer():
             self.player.save_tables()      
             
         #printing stats (not needed by helpful for debugging)
-        print(f'Game ends with {self.player.score}') #score, and {self.player.cumulative_reward} reward,\n episodes: {self.player.episodes}, card count: {len(self.cards)}')
+        print(f'Game ends with {self.player.score} score, and {self.player.cumulative_reward} reward,\n episodes: {self.player.episodes if not self.is_infinite else self.player.playable_episodes}, card count: {len(self.cards)}')
         if self.is_infinite == False: 
             for x,i in enumerate(self.player.loss_state_tracker):
                 print(f'{x} - {i}')
@@ -659,5 +659,5 @@ class Dealer():
 
         #self.player.save_tracking()
                     
-dealer = Dealer(episodes = 100000, num_deck=2, is_infinite=True, training=True)
+dealer = Dealer(episodes = 2, num_deck=2, is_infinite=False, training=True)
 dealer.play_game()
