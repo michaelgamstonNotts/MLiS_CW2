@@ -281,7 +281,7 @@ class Finite_agent(Agent):
         Agent (Agent): The parent class 
     """
     
-    def __init__(self, episodes : int, alpha_info : int):
+    def __init__(self, episodes : int):
         super().__init__(episodes)
         self.q_table_finite = np.zeros([19,10,2,2]) # q-table 
         #! delete me
@@ -292,8 +292,7 @@ class Finite_agent(Agent):
         self.loss_state_tracker = np.zeros(10) # for debugging, will delete before hand in 
         
         self.episodes = episodes
-        self.total_iter = episodes*alpha_info
-        self.alpha_episode_tracker = episodes*alpha_info
+       
                
     def calculate_probability_of_loss(self) -> None:
         """This calculates the probability that the next card will make the agent loose
@@ -437,7 +436,7 @@ class Finite_agent(Agent):
         
         #Recalculate alpha,
         #self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp (- self.alpha_decay_rate * self.episode )
-        self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp(-(1/(self.alpha_decay_rate*self.total_iter))*(self.total_iter - self.alpha_episode_tracker))
+        self.alpha = self.min_alpha + (self.max_alpha - self.min_alpha) * math.exp(-(1/(self.alpha_decay_rate*self.total_iter))*(self.total_iter - self.episodes))
         
         #bellman eqaution 
         self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] = \
@@ -479,18 +478,13 @@ class Dealer():
         self.is_infinite = is_infinite #varible for infinite or finite game
         self.training = training # if training or not
         self.initail_episode_count = episodes
+        self.num_decks = num_deck
         
         #instantiate agent based on is_infinite 
         if self.is_infinite:
             self.player = Infinite_agent(episodes)
         else: 
-            self.player = Finite_agent(episodes, alpha_info = len(num_deck))
-        
-        self.deck_types_left_to_train = []
-        
-        if type(num_deck) == list: 
-            self.deck_types_left_to_train = num_deck
-            self.num_decks = self.deck_types_left_to_train.pop(0)
+            self.player = Finite_agent(episodes)
         
         self.get_decks(self.num_decks)
         
@@ -578,21 +572,9 @@ class Dealer():
                 if self.training:
                     if self.player.episodes != 0:
                         self.player.episodes -= 1
-                        self.player.alpha_episode_tracker -= 1
                         self.get_decks(self.num_decks)
                         stop_condition = len(self.cards)
                         return stop_condition
-            
-                    elif self.player.episodes == 0:
-                        if len(self.deck_types_left_to_train) > 0: 
-                    
-                            print(f'completed first deck type of {self.num_decks} ------------------------------------------------------')
-                            self.player.episodes = self.initail_episode_count
-                            self.num_decks = self.deck_types_left_to_train.pop(0)
-                            self.get_decks(self.num_decks)
-                            stop_condition = len(self.cards)
-                
-                            return stop_condition
             
             stop_condition = cards_left
 
@@ -680,5 +662,5 @@ class Dealer():
 
         #self.player.save_tracking()
                     
-dealer = Dealer(episodes = 50000, num_deck=[1,3,5], is_infinite=False, training=True)
+dealer = Dealer(episodes = 1000, num_deck=2, is_infinite=False, training=True)
 dealer.play_game()
