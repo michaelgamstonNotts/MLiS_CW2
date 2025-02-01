@@ -281,7 +281,7 @@ class Finite_agent(Agent):
         Agent (Agent): The parent class 
     """
     
-    def __init__(self, episodes : int):
+    def __init__(self, episodes : int, toggle_selective_policy = False):
         super().__init__(episodes)
         self.q_table_finite = np.zeros([19,10,2,2]) # q-table 
         #! delete me
@@ -290,7 +290,7 @@ class Finite_agent(Agent):
         self.card_tracker = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0} # card tracking for calculating probabilities (filled during play through)
         self.loss_state = 0 # variable to track the calculate probabilty of lossing
         self.loss_state_tracker = np.zeros(10) # for debugging, will delete before hand in 
-        
+        self.toggle_selective_policy = toggle_selective_policy
         self.episodes = episodes
        
                
@@ -458,8 +458,16 @@ class Finite_agent(Agent):
         for s_index, state in enumerate(self.q_table_finite): 
             for p_index, percentage in enumerate(state): 
                 for u_index, unused_ace in enumerate(percentage):
-                    self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
-                    
+                    if self.toggle_selective_policy: 
+
+                        if (self.state_updated_tracker[s_index][p_index][u_index] > 99): 
+                            self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
+                        else:
+                            self.policy[s_index][p_index][u_index] = 0
+                            
+                    else:
+                        
+                        self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
         #! delete me
         np.save('trackery_mcTrackerson.npy', self.state_updated_tracker)
         np.save('finite_policy.npy', self.policy)
@@ -472,7 +480,7 @@ class Dealer():
     The dealer essentially runs the game.
     """
     
-    def __init__(self, episodes : int, num_deck = 1, is_infinite = False, training = False) -> None:
+    def __init__(self, episodes : int, num_deck = 1, is_infinite = False, training = False, toggle_selective_policy = False) -> None:
         
         self.cards = None # total cards remaing 
         self.is_infinite = is_infinite #varible for infinite or finite game
@@ -484,7 +492,7 @@ class Dealer():
         if self.is_infinite:
             self.player = Infinite_agent(episodes)
         else: 
-            self.player = Finite_agent(episodes)
+            self.player = Finite_agent(episodes, toggle_selective_policy)
         
         self.get_decks(self.num_decks)
         
@@ -662,5 +670,5 @@ class Dealer():
 
         #self.player.save_tracking()
                     
-dealer = Dealer(episodes = 1000, num_deck=2, is_infinite=False, training=True)
+dealer = Dealer(episodes = 10, num_deck=2, is_infinite=False, training=True, toggle_selective_policy = True)
 dealer.play_game()
