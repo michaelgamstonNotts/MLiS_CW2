@@ -12,38 +12,40 @@ class Agent():
     
     def __init__(self, playable_episodes : int):
         self.playable_episodes = playable_episodes #decreases as episodes deplete (used for infinite agent)
+        self.total_iter = playable_episodes #constant iteration count
+        
         self.unused_ace = 0 #flag to track if hand has an unused ace
         self.hand = [] #list of cards in current hand 
         self.score = 0 #current hand score 
-        self.cumulative_reward = 0 #cumulative reward over all episodes (not currently tracked)
+        #self.cumulative_reward = 0 #cumulative reward over all episodes (not currently tracked)
 
-        #algorithm hyperparameters
-        self.alpha = 0.1
-        self.epislon = 0.25
-        self.gamma = 1
-        self.total_iter = playable_episodes #
-        
+        #hyperparamters
         self.min_alpha = 0.001
         self.max_alpha = 1.0
-        self.alpha_decay_rate = 0.08
+        self.alpha_decay_rate = 0.01    #!
+        self.alpha = self.max_alpha # Starting point
         
+        self.epislon = 0.1 #Epsilon-Greedy  #!
+        self.gamma = 1.0 #Future Return     #!
+
+        #Tracking lists
         self.alpha_tracking = []
         self.sumOfHand_tracking = []
         
     def update_tracking(self, is_infinite=True): 
+        
+        #! ??????
         if is_infinite == True:
             self.alpha_tracking.append(self.alpha)
             self.sumOfHand_tracking.append(self.score)
         else:
             self.alpha_tracking.append(self.alpha)
             self.sumOfHand_tracking.append(self.score)
-            print('alpha:', self.alpha, 'self.score',self.score, '...', (self.total_iter - self.episodes -1))
 
     def save_tracking(self, is_infinite=True):
         if not os.path.exists('tracking/'):
             os.makedirs('tracking/')
        
-        
         if is_infinite == True:
             np.save("tracking/alpha_track_infinite.npy",self.alpha_tracking)
             np.save("tracking/hand_sum_track_infinite.npy",self.sumOfHand_tracking)
@@ -306,7 +308,7 @@ class Finite_agent(Agent):
        
                
     def calculate_probability_of_loss(self) -> None:
-        """This calculates the probability that the next card will make the agent loose
+        """This calculates the probability that the next card will make the agent lose
         """
         
         #! subject to change 
@@ -469,7 +471,7 @@ class Finite_agent(Agent):
                 for u_index, unused_ace in enumerate(percentage):
                     if self.toggle_selective_policy: 
                         
-                        if (self.state_updated_tracker[s_index][p_index][u_index] > 99): 
+                        if (self.state_updated_tracker[s_index][p_index][u_index] > 150): 
                             self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
                         else:
                             self.policy[s_index][p_index][u_index] = 2 
@@ -670,12 +672,12 @@ class Dealer():
             self.player.save_tables()      
             
         #printing stats (not needed by helpful for debugging)
-        print(f'Game ends with {self.player.score} score, and {self.player.cumulative_reward} reward,\n episodes: {self.player.episodes if not self.is_infinite else self.player.playable_episodes}, card count: {len(self.cards)}')
+        #print(f'Game ends with {self.player.score} score, and {self.player.cumulative_reward} reward,\n episodes: {self.player.episodes if not self.is_infinite else self.player.playable_episodes}, card count: {len(self.cards)}')
         if self.is_infinite == False: 
             for x,i in enumerate(self.player.loss_state_tracker):
                 print(f'{x} - {i}')
 
         self.player.save_tracking(is_infinite=self.is_infinite)
                     
-dealer = Dealer(episodes = 400000, num_deck=1, is_infinite=False, training=True, toggle_selective_policy = True)
+dealer = Dealer(episodes = 100000, num_deck=1, is_infinite=True, training=True, toggle_selective_policy = True)
 dealer.play_game()
