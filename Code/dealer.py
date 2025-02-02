@@ -677,5 +677,5 @@ class Dealer():
 
         self.player.save_tracking(is_infinite=self.is_infinite)
                     
-dealer = Dealer(episodes = 300000, num_deck=1, is_infinite=False, training=True, toggle_selective_policy = True)
+dealer = Dealer(episodes = 400000, num_deck=1, is_infinite=False, training=True, toggle_selective_policy = True)
 dealer.play_game()
