@@ -1,28 +1,45 @@
-\section{Results}
+\section{Results \& Discussion}
 
-Training of the models 
+The training process for each model was evaluated using moving averages of the score, as illustrated in \ref{fig: Training curve - Infinite} and \ref{fig: Training curve - Finite}, because is it a clear indicator of convergence. The infinite situation converged after approximately '' iterations, which is a considerable amount less than for the finite situation, with '' iterations. This was a direct result of the difference in state spaces. 
 
-The resulting optimal policies are plotted in \ref{fig: Optimal policy - Infinite} for the infinite situation and \ref{fig: Optimal policy - Finite} for the finite situation.  
+The agent began around ~16 score in both situations because that is the middle of the possible values in the game. From here, q-values were updated based upon the agents moves, 
+The two situations both converged at a  of  ~'', 
+
+Stick values in the Q-table quickly converges to their value squared, as defined by equation \ref{reward}, the reward equation, which 
+
+\begin{figure}[ht] 
+    \centering
+    \includegraphics[width=\singlefigure]{figures/infinite_training_curve.png}
+    \caption{Agent's training curve in the infinite situation.}
+    \label{fig: Training curve - Infinite} 
+\end{figure}
+
+\begin{figure}[ht] 
+    \centering
+    \includegraphics[width=\singlefigure]{figures/finite_training_curve.png}
+    \caption{Agent's training curve in the finite situation.}
+    \label{fig: Training curve - Finite} 
+\end{figure}
+
 
 Optimal hyperparameters were selected for each situation via a grid-search approach, in which a selection of hyperparameters were tested and compared. These hyperparameters are indicated in respective figures. 
-epsilon =0.1
-gamma = 1
-alpha decay = varied. 
 
-Speak about convergence in each situation via graph
+The resulting optimal policies are plotted in \ref{fig: Optimal policy - Infinite} for the infinite situation and \ref{fig: Optimal policy - Finite} for the finite situation. The infinite policy hits until 14 with no unused ace, and until 17 with an unused ace, which differs from the industry standard blah blah blah blah
+The differences between this policy and the usual is due to the squared reward defined in \ref{eq: Score} and the absence of an active dealer. 
 
-Speak about policies
 
-\begin{figure}[ht] \label{fig: Optimal policy - Infinite} 
+\begin{figure}[ht]
     \centering
     \includegraphics[width=\singlefigure]{figures/infinite_optimal_policy.png}
     \caption{Optimal policy for the infinite situation, with green indicating hit, and red indicating stick.}
+    \label{fig: Optimal policy - Infinite} 
 \end{figure}
 
-\begin{figure}[ht] \label{fig: Optimal policy - Finite} 
+\begin{figure}[ht]
     \centering
     \includegraphics[width=\singlefigure]{figures/finite_optimal_policy.png}
     \caption{Optimal policy for the finite situation, with green indicating hit, and red indicating stick. Probability bins of 10\% increments are indicated accordingly.}
+    \label{fig: Optimal policy - Finite} 
 \end{figure}
 
 Ideas;
