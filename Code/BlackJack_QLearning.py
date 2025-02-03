@@ -223,9 +223,7 @@ class Infinite_agent(Agent):
         super().__init__(episodes)
         self.q_table_infinite = np.zeros([19,2,2])  #Q-table
         self.policy = None     
-        
-        #! delete me 
-        self.tracker_q = np.zeros([19,2])
+    
                
     def update_q_table(self, new_card : Card, action : int, win_case = False, used_an_ace = False) -> None:
         """
@@ -283,9 +281,6 @@ class Infinite_agent(Agent):
         #Bellman eqaution, used to calculate new Q-values in the Q-table,
         self.q_table_infinite[old_state-2][self.unused_ace][action] = \
                     old_state_value + self.alpha*((reward + self.gamma*max_future_value - old_state_value) - delta) 
-        
-        #! delete me 
-        self.tracker_q[old_state-2][self.unused_ace] += 1
 
         
     def assess(self, training = False) -> str:
@@ -342,10 +337,6 @@ class Infinite_agent(Agent):
                 self.policy[s_index][u_index] = int(np.argmax(unused_ace))
                 
         np.save('infinite_policy.npy', self.policy)
-        
-        
-        #! delete me 
-        np.save('trackerson_the_2nd.npy', self.tracker_q)
 
 
 class Finite_agent(Agent):
@@ -520,7 +511,7 @@ class Finite_agent(Agent):
         """
         np.save('finite_q_table.npy', self.q_table_finite)
         self.policy = np.zeros([19,10,2])
-        #! think of some better names here 
+        
         for s_index, state in enumerate(self.q_table_finite): 
             for p_index, percentage in enumerate(state): 
                 for u_index, unused_ace in enumerate(percentage):
@@ -534,8 +525,6 @@ class Finite_agent(Agent):
                             
                     else:
                         self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
-        #! delete me
-        np.save('trackery_mcTrackerson.npy', self.state_updated_tracker)
         
         np.save('finite_policy.npy', self.policy)
 
@@ -586,8 +575,7 @@ class Dealer():
             return
         elif num_deck > 1:
         
-            for _ in range(1,num_deck):
-                #!change this, concatenate is very slow 
+            for _ in range(1,num_deck): 
                 self.cards = np.concatenate((self.cards, np.array(deck.get_cards())))
         else: 
             raise Exception('Interger above 0 required.')
