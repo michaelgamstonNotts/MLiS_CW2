@@ -1,9 +1,73 @@
-from card import Deck, Card
 import numpy as np
 import math
 import copy
 import os
-import pandas as pd
+from random import shuffle
+
+class Card():
+    """A Class for each card
+    """
+    
+    def __init__(self, suit : str, type : int, value : int) -> None :
+        """Construtor that initiates cards with a value
+
+        Args:
+            suit (String): title of the suit
+            number (Int): title of the card 
+            value (Int): value of the card
+        """
+        self.suit = suit
+        self.type = type
+        self.value = value
+        
+    def change_value(self, new_value : int) -> None:
+        """changes the value of a card. 
+        for the specail case when an ace is present in the hard 
+        and the hand goes over the value of 21
+
+        Args:
+            new_value (int): the new value 
+        """
+        self.value = new_value
+        
+    def __str__(self):
+        return f'{self.type}-{self.suit}-{self.value}'
+        
+class Deck(): 
+    """A class for deck management and manipulation 
+    """
+    
+    def __init__(self) -> None:
+        """constructor that creates a new deck and shuffles it  
+        """
+        
+        self.deck = []
+        
+    def generate_deck(self) -> None:
+        """creates a 52 card deck 
+        """
+        self.deck = []
+        suits = ['Diamonds', 'Hearts', 'Clubs', 'Spades']
+        card_types = {'2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':10, 'Jack':10, 'Queen':10, 'King':10, 'Ace':11}
+        for suit in suits:
+            for card in card_types.keys():
+                self.deck.append(Card(suit, card, card_types[card]))
+    
+    def shuffle(self) -> None:
+        """shuffles the deck
+        """
+        
+        shuffle(self.deck)
+    
+    def get_cards(self) -> list: 
+        """returns a list of shuffled cards
+
+        Returns:
+            list: 52 cards
+        """
+        self.generate_deck()
+        self.shuffle()
+        return self.deck
 
 class Agent():
     """
@@ -21,17 +85,15 @@ class Agent():
 
         #algorithm hyperparameters
         self.alpha = 0.1
-        self.epislon = 0.25
+        self.epislon = 0.1
         self.gamma = 1
         self.total_iter = playable_episodes #
         
+        #degrading alpha hyperparameters 
         self.min_alpha = 0.001
         self.max_alpha = 1.0
-        self.alpha_decay_rate = 0.01    #!
-        self.alpha = self.max_alpha # Starting point
-        
-        self.epislon = 0.1 #Epsilon-Greedy  #!
-        self.gamma = 1.0 #Future Return     #!
+        self.alpha_decay_rate = 0.01    
+        self.alpha = self.max_alpha # Starting point 
 
         #Tracking lists
         self.alpha_tracking = []
@@ -84,7 +146,7 @@ class Agent():
                 card.change_value(1)
                 self.score -= 10
                 self.unused_ace = 0
-        print('changed ace value')
+        
         
     def hit(self, new_card : Card, training=False) -> None:
         """
@@ -161,8 +223,8 @@ class Infinite_agent(Agent):
         super().__init__(episodes)
         self.q_table_infinite = np.zeros([19,2,2])  #Q-table
         self.policy = None     
-        #! delete me 
         
+        #! delete me 
         self.tracker_q = np.zeros([19,2])
                
     def update_q_table(self, new_card : Card, action : int, win_case = False, used_an_ace = False) -> None:
@@ -185,16 +247,14 @@ class Infinite_agent(Agent):
         old_state = self.score
         new_state = old_state+new_card_value
         
-        #delta, take points from reward when we regress from loosing an ace 
+        #delta, take points from reward when we regress states from loosing an ace 
         delta = 0
-        #fixed aces bug 
-        #keep state of ace to be what it was before the change 
+        
+        #find the state the algorithm was in before the ace changed value and the algorithm switched values 
         #this is to allow correct switching between the no ace and ace side of the q -table
         if used_an_ace: 
             old_state+=10
             delta = old_state**2 - self.score**2
-            #print(old_state, self.score)
-            
             
         old_state_value = self.q_table_infinite[old_state-2][self.unused_ace][action] 
         
@@ -226,7 +286,7 @@ class Infinite_agent(Agent):
         
         #! delete me 
         self.tracker_q[old_state-2][self.unused_ace] += 1
-        print('Updated Q-table')
+
         
     def assess(self, training = False) -> str:
         """
@@ -298,33 +358,31 @@ class Finite_agent(Agent):
     
     def __init__(self, episodes : int, toggle_selective_policy = False):
         super().__init__(episodes)
-        self.q_table_finite = np.zeros([19,10,2,2]) # q-table 
-        #! delete me
-        self.state_updated_tracker = np.zeros([19,10,2])
+        self.q_table_finite = np.zeros([19,10,2,2]) # q-table
+        self.state_updated_tracker = np.zeros([19,10,2]) #track how many update each state gets to track convergence 
         self.policy = None # empty policy 
         self.card_tracker = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0} # card tracking for calculating probabilities (filled during play through)
         self.loss_state = 0 # variable to track the calculate probabilty of lossing
-        self.loss_state_tracker = np.zeros(10) # for debugging, will delete before hand in 
-        self.toggle_selective_policy = toggle_selective_policy
-        self.episodes = episodes
+        self.toggle_selective_policy = toggle_selective_policy #used as a boolean in save_tables (look in function description for further explination)
+        self.episodes = episodes #used to track the amount of episodes
        
                
     def calculate_probability_of_loss(self) -> None:
         """This calculates the probability that the next card will make the agent lose
         """
         
-        #! subject to change 
-        
         total_number_cards = sum(self.card_tracker.values())
+        
         #find the minimum score that will make the agent lose 
-        #find the number of cards that equal or exceed over the total number of cards 
         loss_value = 21 - self.score
         
+        #find the number of cards that equal or exceed that minimum score, devide by the total number of cards 
         if loss_value < 11:
             numerator = sum(list(self.card_tracker.values())[loss_value:])
         else: 
             numerator = 0
         
+        #calculate percentage of lossing, using 10% bins
         percentile = int(round((numerator / total_number_cards), 2)*100)
         if percentile >= 90: 
             self.loss_state = 9 
@@ -347,9 +405,6 @@ class Finite_agent(Agent):
         elif percentile >= 0:
             self.loss_state = 0  
              
-        #! for old loss state 
-        #self.loss_state = int(round((numerator / total_number_cards), 2)*100)
-        print(f'- loss_state {self.loss_state}')
         
     def assess(self, training = False) -> None:
         """
@@ -368,39 +423,38 @@ class Finite_agent(Agent):
         """
         
         action_int_to_str = {0:'stick', 1:'hit'}
-        # for training only 
+        #calculate loss probability 
         self.calculate_probability_of_loss()
         
+        #when training
         if training: 
             #get q value for hit and stick
-            
-            
-
             stick_q = self.q_table_finite[self.score-2][self.loss_state][self.unused_ace][0]
             hit_q = self.q_table_finite[self.score-2][self.loss_state][self.unused_ace][1]
 
             
-            #check if they are equal
-            if stick_q == hit_q:
-                #choose random action is yes
-                action = np.random.randint(0,2)
-            else:
-                #else run epsilon greedy to find action 
+            if stick_q == hit_q: #If stick and hit are equal, 
+                action = np.random.randint(0,2) #pick random move.
+            else: #Otherwise, run Epsilon-greedy algorithm to pick the next move.
                 if self.epislon > np.random.random():
                     action = np.random.randint(0,2)
                 else:
                     action = np.argmax(self.q_table_finite[self.score-2][self.loss_state][self.unused_ace])
             
+            #return 'hit' or 'stick'
             return action_int_to_str[action]
         
         else: 
+            #when not training
             try:
+                #if the policy variable is empty fill it with pre-trained table 
                 if type(self.policy) != np.ndarray: 
                     self.policy = np.load('finite_policy.npy')
             except FileNotFoundError as e:
                 print(e)
                 raise RuntimeError('Training required to create policy table.')
             
+            #return 'hit' or 'stick'
             return action_int_to_str[self.policy[self.score-2][self.loss_state][self.unused_ace]]
         
     def update_q_table(self, new_card : Card, action : int, win_case = False, used_an_ace = False):
@@ -423,17 +477,16 @@ class Finite_agent(Agent):
         new_state = old_state+new_card_value
         
         delta = 0
-        #fixed aces bug 
-        #keep state of ace to be what it was before the change 
+        #find the state the algorithm was in before the ace changed value and the algorithm switched values 
         #this is to allow correct switching between the no ace and ace side of the q -table
         if used_an_ace: 
             old_state+=10
             delta = old_state**2 - self.score**2
-            #print(old_state, self.score)
+            
             
         old_state_value = self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] 
         
-        if new_state > 21:
+        if new_state > 21: #If the new score exceeds the score limit,
             reward = 0
             max_future_value = 0
         
@@ -456,9 +509,9 @@ class Finite_agent(Agent):
         self.q_table_finite[old_state-2][self.loss_state][self.unused_ace][action] = \
             old_state_value + self.alpha*((reward + self.gamma*max_future_value - old_state_value) - delta)
         
-        #! delete me 
+        #track how many update each state gets to track convergence 
         self.state_updated_tracker[old_state-2][self.loss_state][self.unused_ace] += 1
-        self.loss_state_tracker[self.loss_state] += 1
+
         
         
     def save_tables(self):
@@ -471,6 +524,7 @@ class Finite_agent(Agent):
         for s_index, state in enumerate(self.q_table_finite): 
             for p_index, percentage in enumerate(state): 
                 for u_index, unused_ace in enumerate(percentage):
+                    #When toggle_selective_policy == True, only save state pairs with more than 150 iteration to the policy (as states below this value have not had time to converge )
                     if self.toggle_selective_policy: 
                         
                         if (self.state_updated_tracker[s_index][p_index][u_index] > 150): 
@@ -482,6 +536,7 @@ class Finite_agent(Agent):
                         self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
         #! delete me
         np.save('trackery_mcTrackerson.npy', self.state_updated_tracker)
+        
         np.save('finite_policy.npy', self.policy)
 
 
@@ -610,7 +665,7 @@ class Dealer():
         stop_condition = self.evaulate_stop_condition(is_infinite=self.is_infinite)
 
         while(0 < stop_condition):
-            print(f'round starts with {len(self.cards)}')
+
             # give player a card
             first_card = self.hit(is_infinite=self.is_infinite)
             #manually add card info to agent 
@@ -618,10 +673,9 @@ class Dealer():
             self.player.hand.append(first_card)
             self.player.check_for_unused_ace()
             
-            #print('\nfirst hand given ----------------------------------------------')
+            
             while True: 
-                #print(f'round begins with: score {self.player.score}, aces {self.player.unused_ace}')
-                #print(*self.player.hand)
+                
                 
                 #check if there are cards to play still
                 if len(self.cards) < 1:
@@ -634,12 +688,10 @@ class Dealer():
                 #check if player looses 
                 if self.player.score > 21: 
                     if self.player.unused_ace == 0:
-                        #print('player loses')
                         break 
                     else:
-                        #! need to update q-value
                         self.player.change_ace_value()
-                        #print('got to over 21, changed ace value')
+                        
                 
                 #ask player if they want to hit or stick
                 response = self.player.assess(training=self.training)
@@ -649,14 +701,12 @@ class Dealer():
                     #if hit then ask for a new card and pass it to the player 
                     #if training then hit() will update the q-table
                     self.player.hit(self.hit(is_infinite=self.is_infinite), training=self.training)
-                    #print('player hits')
+
                 elif response == 'stick':
                     #if stick then stop the game 
                     if self.training:
                         #update q-table if training required 
-                        #print('update from stick')
                         self.player.update_q_table(new_card = None, action = 0)
-                    #print(f'player sticks with score {self.player.score} and reward {self.player.cumulative_reward}')
                     break
             
             self.player.update_tracking(is_infinite=self.is_infinite) 
@@ -670,15 +720,9 @@ class Dealer():
         
         #if training then save the q-table and policy 
         if self.training: 
-            print('epdisode of training complete')
+            print('training complete')
             self.player.save_tables()      
             
-        #printing stats (not needed by helpful for debugging)
-        print(f'Game ends with {self.player.score} score, and {self.player.cumulative_reward} reward,\n episodes: {self.player.episodes if not self.is_infinite else self.player.playable_episodes}, card count: {len(self.cards)}')
-        if self.is_infinite == False: 
-            for x,i in enumerate(self.player.loss_state_tracker):
-                print(f'{x} - {i}')
-
         self.player.save_tracking(is_infinite=self.is_infinite)
                     
 dealer = Dealer(episodes = 10, num_deck=2, is_infinite=False, training=True, toggle_selective_policy = True)
