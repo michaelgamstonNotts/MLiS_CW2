@@ -99,15 +99,13 @@ class Agent():
         self.alpha_tracking = []
         self.sumOfHand_tracking = []
         
-    def update_tracking(self, is_infinite=True): 
+    def update_tracking(self): 
+        """Updates tracking parameters 
+        """
+    
+        self.alpha_tracking.append(self.alpha)
+        self.sumOfHand_tracking.append(self.score)
         
-        #! ??????
-        if is_infinite == True:
-            self.alpha_tracking.append(self.alpha)
-            self.sumOfHand_tracking.append(self.score)
-        else:
-            self.alpha_tracking.append(self.alpha)
-            self.sumOfHand_tracking.append(self.score)
 
     def save_tracking(self, is_infinite=True):
         if not os.path.exists('tracking/'):
@@ -446,7 +444,7 @@ class Finite_agent(Agent):
                 raise RuntimeError('Training required to create policy table.')
             
             #return 'hit' or 'stick'
-            return action_int_to_str[self.policy[self.score-2][self.loss_state][self.unused_ace]]
+            return action_int_to_str[int(self.policy[self.score-2][self.loss_state][self.unused_ace])]
         
     def update_q_table(self, new_card : Card, action : int, win_case = False, used_an_ace = False):
         """
@@ -521,7 +519,7 @@ class Finite_agent(Agent):
                         if (self.state_updated_tracker[s_index][p_index][u_index] > 150): 
                             self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
                         else:
-                            self.policy[s_index][p_index][u_index] = 2 
+                            self.policy[s_index][p_index][u_index] = 0
                             
                     else:
                         self.policy[s_index][p_index][u_index] = np.argmax(unused_ace)
@@ -713,5 +711,5 @@ class Dealer():
             
         self.player.save_tracking(is_infinite=self.is_infinite)
                     
-dealer = Dealer(episodes = 10, num_deck=2, is_infinite=False, training=True, toggle_selective_policy = True)
+dealer = Dealer(episodes = 10, num_deck=2, is_infinite=True, training=True, toggle_selective_policy = True)
 dealer.play_game()
