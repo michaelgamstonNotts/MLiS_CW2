@@ -6,9 +6,9 @@ In training an agent to play Blackjack, an iterative Q-Learning approach was tak
 \end{multline}
 Where \( s, a \) are the current state and action,  \( s', a' \) are the next state and action, \( \alpha \) is the learning rate, \( \gamma \) is the discount factor, \( R(s,a) \) is the reward received after taking action \( a \) in state \( s \), and \( Q(s,a) \) is the q-value for the state-action pair. The highlighted temporal difference is used to update an estimate based on other estimates, without waiting for a final outcome (known as bootstrapping) \cite{10.5555/3312046}. The learning rate \(\alpha\) decayed throughout training with the aim of reducing probability induced learning oscillations. It took the equation, 
 \begin{equation} \label{eq:learning rate}
-    \alpha = \alpha_{min} + (\alpha_{max} - \alpha_{min})e^{-\frac{1}{dt}}
+    \alpha = \alpha_{min} + (\alpha_{max} - \alpha_{min})e^{-\frac{1}{Dt}}
 \end{equation}
-For respective values for the minimum and maximum learning rate, decay rate \(d\), and number of iterations over the training process \(t\). The reward \(R(s,a)\), passed to the agent to drive learning, was defined by
+For respective values for the minimum and maximum learning rate, decay rate \(D\), and number of iterations over the training process \(t\). The reward \(R(s,a)\), passed to the agent to drive learning, was defined by
 \begin{equation} \label{reward}
     R(s,a) = S_{new}^2 - (S_{old}^2 - S_{new}^2)\delta_{Ace}
 \end{equation}
@@ -35,4 +35,4 @@ In the 'finite' situation, cards were drawn from a pile of finite number, meanin
 To balance accuracy with computational efficiency, the probability of losing was integrated into the Q-table (a concept from reinforcement learning where Q-values represent the expected utility of taking an action). This approach was chosen over, say, card counting because it provided a more accurate representation of the environment while maintaining relatively low complexity. Since these probabilities could have been deduced from previously dealt cards, providing the agent with this essentially skipped the step of learning probabilistic expectations. 
 
 \medskip
-To implement this continuous probability into the Q-table of finite dimension size, the probabilities were discretized, i.e., continuous probabilities were separated into bins of size 2\%. Therefore, the environment was composed of three variables - current score, usable ace, and probability of losing - and one action variable - hit/stick. 
+To implement this continuous probability into the Q-table of finite dimension size, the probabilities were discretized, i.e., continuous probabilities were separated into bins of size 10\%. Therefore, the environment was composed of three variables - current score, usable ace, and probability of losing - and one action variable - hit/stick. 

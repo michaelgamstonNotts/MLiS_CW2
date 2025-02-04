@@ -1,7 +1,9 @@
 \section{Conclusions}
 
-This paper presents a reinforcement learning approach to solving Blackjack, with considerable attention paid to the games probabilistic nature. Watkin's Q-Learning was employed with a reward relative to the square of the card, for situations with constant and changing probabilities. 
+% This paper presents a reinforcement learning approach to solving Blackjack, with considerable attention paid to the games probabilistic nature. Watkin's Q-Learning was employed with a reward relative to the square of the card, for situations with constant and changing probabilities. 
 
-The training processes converged after 
+%  It used a decaying learning rate and an Epsilon-Greedy algorithm to maximize exploration.
 
-Optimal policies were created which, with no usable ace, stopped hitting at 15 and, with a usable ace, stopped hitting at 18. These values contrast a statisticians optimum. 
+% Optimal policies were created for each problem situation which were logical within the context of the given reward function and the rules of the game. 
+
+In conclusion, the application of reinforcement learning to blackjack demonstrated the potential for intelligent agents to learn optimal strategies for infinite and finite decks of cards. The Q-learning approach enabled the agent to approximate effective policies, with performance converging after varying numbers of iterations depending on the complexity of the state space. A decaying learning rate and an Epsilon-Greedy algorithm were employed for training. This approach has highlighted the efficacy of incorporating probabilistic elements, such as the chance of losing, into the training process.
