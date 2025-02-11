@@ -1,5 +1,1 @@
-## Howdy 
-
-to-do list: 
-- fix counting aces bug 
-- fix bug where tables are updated from state 21
+This paper explores the use of reinforcement learning to develop optimal strategies for playing Blackjack, focusing on both infinite and finite deck scenarios. Using Watkin's Q-learning, an agent was trained to determine optimal policies by iterating through state-action pairs and adjusting its policy based on rewards. Results demonstrated that the agent could effectively learn and improve its performance. The introduction of probabilistic elements, such as the probability of losing, was crucial for handling the complexity of finite decks, where the expected card value was not constant. 
